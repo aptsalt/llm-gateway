@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+*.log
+coverage/
+drizzle/
+.turbo/
+dashboard/.next/
+dashboard/node_modules/
+dashboard/tsconfig.tsbuildinfo
