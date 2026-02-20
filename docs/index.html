@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Gateway - Intelligent Multi-Provider LLM Gateway</title>
+  <meta name="description" content="Drop-in OpenAI replacement with smart routing, semantic caching, circuit breakers, budget control, and automated benchmarking.">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --border: #262626;
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --accent: #3b82f6;
+      --accent-dim: #1e3a5f;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --orange: #f97316;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 80px 24px 60px;
+      background: linear-gradient(180deg, var(--accent-dim) 0%, var(--bg) 100%);
+    }
+    .hero h1 { font-size: 3rem; font-weight: 800; letter-spacing: -0.02em; }
+    .hero .tagline {
+      font-size: 1.25rem;
+      color: var(--muted);
+      max-width: 680px;
+      margin: 16px auto 0;
+    }
+    .badges { display: flex; gap: 8px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+    .badges img { height: 22px; }
+    .cta-row { display: flex; gap: 12px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+    .cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 0.95rem;
+      transition: opacity 0.2s;
+    }
+    .cta:hover { opacity: 0.85; text-decoration: none; }
+    .cta-primary { background: var(--accent); color: #fff; }
+    .cta-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+    /* Install snippet */
+    .install {
+      max-width: 520px;
+      margin: 28px auto 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 20px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-align: left;
+    }
+    .install span { color: var(--green); }
+
+    /* Section */
+    .section { max-width: 1100px; margin: 0 auto; padding: 60px 24px; }
+    .section h2 {
+      font-size: 2rem; font-weight: 700; text-align: center;
+      margin-bottom: 12px;
+    }
+    .section .subtitle {
+      text-align: center; color: var(--muted); margin-bottom: 40px;
+      max-width: 600px; margin-left: auto; margin-right: auto;
+    }
+
+    /* Features grid */
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+    }
+    .feature-icon {
+      width: 40px; height: 40px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; margin-bottom: 14px;
+      background: var(--accent-dim);
+    }
+    .feature h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 6px; }
+    .feature p { color: var(--muted); font-size: 0.9rem; }
+
+    /* Screenshots */
+    .screenshots {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .screenshot {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .screenshot img { width: 100%; display: block; }
+    .screenshot .caption {
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .screenshot .caption strong { color: var(--text); }
+
+    /* Architecture */
+    .arch-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      overflow-x: auto;
+    }
+    .arch-block pre {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* Stats */
+    .stats { display: flex; gap: 0; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+    .stat {
+      text-align: center;
+      padding: 20px 40px;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat .num { font-size: 2.2rem; font-weight: 800; color: var(--accent); }
+    .stat .label { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2rem; }
+      .hero .tagline { font-size: 1rem; }
+      .stat { padding: 16px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <section class="hero">
+    <h1>LLM Gateway</h1>
+    <p class="tagline">
+      Intelligent multi-provider LLM gateway with cost-optimized routing, semantic caching,
+      automated benchmarking, and real-time observability. Drop-in OpenAI API replacement.
+    </p>
+    <div class="badges">
+      <img src="https://img.shields.io/badge/TypeScript-5.7_strict-blue?logo=typescript&logoColor=white" alt="TypeScript">
+      <img src="https://img.shields.io/badge/Hono-4.6-orange?logo=hono&logoColor=white" alt="Hono">
+      <img src="https://img.shields.io/badge/Tests-111%20passing-brightgreen" alt="Tests">
+      <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License">
+    </div>
+    <div class="cta-row">
+      <a href="https://github.com/aptsalt/llm-gateway" class="cta cta-primary">View on GitHub</a>
+      <a href="https://github.com/aptsalt/llm-gateway#quick-start" class="cta cta-secondary">Quick Start</a>
+    </div>
+    <div class="install">
+      <span>$</span> git clone https://github.com/aptsalt/llm-gateway.git<br>
+      <span>$</span> cd llm-gateway && npm install && npm run dev
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="stats">
+      <div class="stat"><div class="num">5</div><div class="label">Providers</div></div>
+      <div class="stat"><div class="num">14</div><div class="label">Benchmark Tasks</div></div>
+      <div class="stat"><div class="num">111</div><div class="label">Tests Passing</div></div>
+      <div class="stat"><div class="num">0</div><div class="label">Dependencies*</div></div>
+    </div>
+    <p style="text-align:center;color:var(--muted);font-size:0.8rem;margin-top:-28px;">*Hono framework — zero dependency runtime</p>
+  </section>
+
+  <section class="section">
+    <h2>Features</h2>
+    <p class="subtitle">Everything you need to run LLMs in production with full control over cost, quality, and reliability.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">&#x1F9E0;</div>
+        <h3>Smart Routing</h3>
+        <p>Classifies prompt complexity and routes to the optimal model. Choose cost, quality, latency, or balanced strategies with configurable weights.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x26A1;</div>
+        <h3>Semantic Caching</h3>
+        <p>Redis-backed cosine similarity cache catches rephrased queries. "What's 2+2?" and "What is two plus two?" hit the same cache entry.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F6E1;</div>
+        <h3>Circuit Breakers</h3>
+        <p>Per-provider state machines with automatic failover. When a provider goes down, requests fail fast instead of waiting for timeouts.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F4B0;</div>
+        <h3>Budget Control</h3>
+        <p>Per-key and global monthly token/USD limits with alerts at 80% and 95%. Never get a surprise bill again.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F4CA;</div>
+        <h3>Benchmarking</h3>
+        <p>14 standardized tasks across 5 categories. Data-driven model selection — no more guessing which model is best for your use case.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1F504;</div>
+        <h3>OpenAI Compatible</h3>
+        <p>Change your base_url and you're done. Works with any OpenAI SDK, LangChain, LlamaIndex, or plain curl.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Dashboard</h2>
+    <p class="subtitle">Full-featured admin dashboard with real-time monitoring, routing configuration, and interactive playground.</p>
+    <div class="screenshots">
+      <div class="screenshot">
+        <img src="../screenshots/01-dashboard-overview.png" alt="Dashboard Overview" loading="lazy">
+        <div class="caption"><strong>Overview</strong> — Provider health, latency charts, token usage, budget tracking</div>
+      </div>
+      <div class="screenshot">
+        <img src="../screenshots/02-providers.png" alt="Providers" loading="lazy">
+        <div class="caption"><strong>Providers</strong> — Real-time latency monitoring and health status</div>
+      </div>
+      <div class="screenshot">
+        <img src="../screenshots/03-routing.png" alt="Routing" loading="lazy">
+        <div class="caption"><strong>Routing</strong> — Strategy selector, weight sliders, fallback chain config</div>
+      </div>
+      <div class="screenshot">
+        <img src="../screenshots/04-api-keys.png" alt="API Keys" loading="lazy">
+        <div class="caption"><strong>API Keys</strong> — Key management with per-key budget limits</div>
+      </div>
+      <div class="screenshot">
+        <img src="../screenshots/05-analytics.png" alt="Analytics" loading="lazy">
+        <div class="caption"><strong>Analytics</strong> — Cost breakdown, provider usage, token consumption</div>
+      </div>
+      <div class="screenshot">
+        <img src="../screenshots/06-playground.png" alt="Playground" loading="lazy">
+        <div class="caption"><strong>Playground</strong> — Interactive prompt testing with routing metadata</div>
+      </div>
+      <div class="screenshot">
+        <img src="../screenshots/07-benchmarks.png" alt="Benchmarks" loading="lazy">
+        <div class="caption"><strong>Benchmarks</strong> — Model comparison with scorecards, radar charts, and detailed results</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Architecture</h2>
+    <p class="subtitle">Request pipeline: Auth &rarr; Cache &rarr; Route &rarr; Execute &rarr; Log</p>
+    <div class="arch-block">
+<pre>
+                         ┌────────────────────────────┐
+                         │     Client Applications     │
+                         │   (OpenAI SDK / curl / any) │
+                         └──────────┬─────────────────┘
+                                    │
+                          POST /v1/chat/completions
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                        LLM Gateway (Hono)                              │
+│                                                                        │
+│  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌──────────────────────┐  │
+│  │  Auth &   │→│ Semantic   │→│  Router   │→│  Fallback Chain      │  │
+│  │  Budget   │  │  Cache     │  │  Engine   │  │  + Circuit Breakers  │  │
+│  └──────────┘  └───────────┘  └──────────┘  └──────────┬───────────┘  │
+│                                                         │              │
+│  ┌──────────────────────────────────────────────────────┘              │
+│  │                                                                     │
+│  ▼          ▼           ▼           ▼           ▼                      │
+│ Ollama    OpenAI    Anthropic     Groq      Together                   │
+│ (local)   (cloud)   (cloud)     (cloud)    (cloud)                    │
+│                                                                        │
+│  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌──────────────────────┐  │
+│  │Prometheus│  │ PostgreSQL │  │  Redis    │  │  Benchmark Suite     │  │
+│  │ Metrics  │  │   Logs     │  │  Cache    │  │  (14 tasks)          │  │
+│  └──────────┘  └───────────┘  └──────────┘  └──────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────┘
+</pre>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Supported Providers</h2>
+    <p class="subtitle">Route across local and cloud providers with intelligent model selection.</p>
+    <div class="features" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <div class="feature" style="text-align:center;">
+        <h3>Ollama</h3>
+        <p>Local GPU inference<br><strong style="color:var(--green)">Free</strong></p>
+      </div>
+      <div class="feature" style="text-align:center;">
+        <h3>Groq</h3>
+        <p>Ultra-fast cloud<br><strong style="color:var(--green)">Very Low Cost</strong></p>
+      </div>
+      <div class="feature" style="text-align:center;">
+        <h3>Together AI</h3>
+        <p>Open-source models<br><strong style="color:var(--green)">Low Cost</strong></p>
+      </div>
+      <div class="feature" style="text-align:center;">
+        <h3>OpenAI</h3>
+        <p>GPT-4o, GPT-4o-mini<br><strong style="color:var(--yellow)">Medium-High</strong></p>
+      </div>
+      <div class="feature" style="text-align:center;">
+        <h3>Anthropic</h3>
+        <p>Claude Sonnet, Haiku<br><strong style="color:var(--yellow)">Medium-High</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>MIT License &middot; Built by <a href="https://github.com/aptsalt">aptsalt</a></p>
+    <p style="margin-top:8px;">
+      <a href="https://github.com/aptsalt/llm-gateway">GitHub</a> &middot;
+      <a href="https://github.com/aptsalt/llm-gateway#quick-start">Quick Start</a> &middot;
+      <a href="https://github.com/aptsalt/llm-gateway#api-reference">API Reference</a>
+    </p>
+  </footer>
+
+</body>
+</html>
