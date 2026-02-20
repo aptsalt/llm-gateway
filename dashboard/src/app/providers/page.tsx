@@ -35,8 +35,8 @@ export default function ProvidersPage() {
     async function fetchData() {
       try {
         const [provRes, breakerRes] = await Promise.allSettled([
-          fetch(`${GATEWAY_URL}/api/providers`).then((r) => r.json()),
-          fetch(`${GATEWAY_URL}/api/circuit-breakers`).then((r) => r.json()),
+          fetch(`${GATEWAY_URL}/api/providers`).then((r) => r.ok ? r.json() : null),
+          fetch(`${GATEWAY_URL}/api/circuit-breakers`).then((r) => r.ok ? r.json() : null),
         ]);
 
         if (provRes.status === "fulfilled") {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/card";
+import { toast } from "sonner";
 
 const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL ?? "http://localhost:4000";
 
@@ -39,7 +40,7 @@ export default function RoutingPage() {
     if (!config) return;
     setSaving(true);
     try {
-      await fetch(`${GATEWAY_URL}/api/admin/routing`, {
+      const res = await fetch(`${GATEWAY_URL}/api/admin/routing`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -47,8 +48,10 @@ export default function RoutingPage() {
         },
         body: JSON.stringify(config),
       });
+      if (res.ok) toast.success("Routing configuration saved");
+      else toast.error("Failed to save configuration");
     } catch {
-      // Handle error
+      toast.error("Failed to save configuration");
     }
     setSaving(false);
   }

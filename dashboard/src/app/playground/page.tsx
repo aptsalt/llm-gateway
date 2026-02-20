@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/card";
 import { formatCost, formatLatency } from "@/lib/utils";
+import { toast } from "sonner";
 
 const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL ?? "http://localhost:4000";
 
@@ -23,6 +24,11 @@ interface ChatResponse {
   "x-gateway": GatewayMetadata;
 }
 
+interface ModelInfo {
+  id: string;
+  owned_by: string;
+}
+
 export default function PlaygroundPage() {
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("auto");
@@ -31,6 +37,23 @@ export default function PlaygroundPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState("");
+  const [models, setModels] = useState<ModelInfo[]>([]);
+
+  useEffect(() => {
+    fetch(`${GATEWAY_URL}/v1/models`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.data) setModels(data.data as ModelInfo[]);
+      })
+      .catch(() => {});
+  }, []);
+
+  const modelsByProvider = models.reduce<Record<string, ModelInfo[]>>((acc, m) => {
+    const provider = m.owned_by || "unknown";
+    if (!acc[provider]) acc[provider] = [];
+    acc[provider].push(m);
+    return acc;
+  }, {});
 
   async function sendRequest() {
     if (!prompt.trim()) return;
@@ -55,12 +78,18 @@ export default function PlaygroundPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setError((data as { error?: { message?: string } }).error?.message ?? "Request failed");
+        const msg = (data as { error?: { message?: string } }).error?.message ?? "Request failed";
+        setError(msg);
+        toast.error(msg);
       } else {
         setResponse(data as ChatResponse);
+        const gw = (data as ChatResponse)["x-gateway"];
+        toast.success(`Response from ${gw.provider} in ${formatLatency(gw.latency_ms)}`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error");
+      const msg = err instanceof Error ? err.message : "Network error";
+      setError(msg);
+      toast.error(msg);
     }
     setLoading(false);
   }
@@ -89,7 +118,7 @@ export default function PlaygroundPage() {
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="gw-dev-..."
-                  className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
 
@@ -99,29 +128,27 @@ export default function PlaygroundPage() {
                   <select
                     value={model}
                     onChange={(e) => setModel(e.target.value)}
-                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                   >
-                    <optgroup label="Virtual Models">
+                    <optgroup label="Virtual Models (Router)">
                       <option value="auto">auto (router decides)</option>
                       <option value="fast">fast (latency-optimized)</option>
                       <option value="cheap">cheap (cost-optimized)</option>
+                      <option value="quality">quality (best quality)</option>
                     </optgroup>
-                    <optgroup label="Ollama">
-                      <option value="llama3.2">llama3.2</option>
-                      <option value="qwen2.5-coder:7b">qwen2.5-coder:7b</option>
-                    </optgroup>
-                    <optgroup label="OpenAI">
-                      <option value="gpt-4o">gpt-4o</option>
-                      <option value="gpt-4o-mini">gpt-4o-mini</option>
-                    </optgroup>
-                    <optgroup label="Anthropic">
-                      <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
-                      <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-                    </optgroup>
-                    <optgroup label="Groq">
-                      <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
-                      <option value="llama-3.1-8b-instant">Llama 3.1 8B</option>
-                    </optgroup>
+                    {Object.entries(modelsByProvider).map(([provider, provModels]) => (
+                      <optgroup key={provider} label={provider}>
+                        {provModels.map((m) => (
+                          <option key={m.id} value={m.id}>{m.id}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                    {models.length === 0 && (
+                      <optgroup label="Ollama">
+                        <option value="llama3.2">llama3.2</option>
+                        <option value="qwen2.5-coder:7b">qwen2.5-coder:7b</option>
+                      </optgroup>
+                    )}
                   </select>
                 </div>
 
@@ -130,7 +157,7 @@ export default function PlaygroundPage() {
                   <select
                     value={strategy}
                     onChange={(e) => setStrategy(e.target.value)}
-                    className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                    className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                   >
                     <option value="balanced">Balanced</option>
                     <option value="cost">Cost Optimized</option>
@@ -145,18 +172,24 @@ export default function PlaygroundPage() {
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) sendRequest(); }}
                   rows={6}
-                  placeholder="Enter your prompt here..."
-                  className="mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                  placeholder="Enter your prompt here... (Ctrl+Enter to send)"
+                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
 
               <button
                 onClick={sendRequest}
                 disabled={loading || !prompt.trim()}
-                className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
               >
-                {loading ? "Sending..." : "Send Request"}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                    Sending...
+                  </span>
+                ) : "Send Request"}
               </button>
             </div>
           </Card>
@@ -165,11 +198,11 @@ export default function PlaygroundPage() {
         {/* Response */}
         <div className="space-y-4">
           {error && (
-            <Card className="border-red-200 bg-red-50">
+            <Card className="border-destructive/50 bg-destructive/10">
               <CardHeader>
-                <CardTitle className="text-red-800">Error</CardTitle>
+                <CardTitle className="text-destructive">Error</CardTitle>
               </CardHeader>
-              <p className="text-sm text-red-700">{error}</p>
+              <p className="text-sm text-destructive">{error}</p>
             </Card>
           )}
 
@@ -180,7 +213,7 @@ export default function PlaygroundPage() {
                   <CardTitle>Response</CardTitle>
                   <CardDescription>Model: {response.model}</CardDescription>
                 </CardHeader>
-                <div className="whitespace-pre-wrap rounded-md bg-gray-50 p-4 text-sm">
+                <div className="whitespace-pre-wrap rounded-md bg-muted p-4 text-sm">
                   {response.choices[0]?.message.content}
                 </div>
               </Card>
@@ -190,30 +223,19 @@ export default function PlaygroundPage() {
                   <CardTitle>Gateway Metadata</CardTitle>
                 </CardHeader>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Provider</span>
-                    <span className="font-medium">{response["x-gateway"].provider}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Routing Decision</span>
-                    <span className="max-w-xs truncate font-medium">{response["x-gateway"].routing_decision}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Latency</span>
-                    <span className="font-medium">{formatLatency(response["x-gateway"].latency_ms)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Cost</span>
-                    <span className="font-medium">{formatCost(response["x-gateway"].cost_usd)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Cache Hit</span>
-                    <span className="font-medium">{response["x-gateway"].cache_hit ? "Yes" : "No"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Fallback Used</span>
-                    <span className="font-medium">{response["x-gateway"].fallback_used ? "Yes" : "No"}</span>
-                  </div>
+                  {[
+                    { label: "Provider", value: response["x-gateway"].provider },
+                    { label: "Routing Decision", value: response["x-gateway"].routing_decision },
+                    { label: "Latency", value: formatLatency(response["x-gateway"].latency_ms) },
+                    { label: "Cost", value: formatCost(response["x-gateway"].cost_usd) },
+                    { label: "Cache Hit", value: response["x-gateway"].cache_hit ? "Yes" : "No" },
+                    { label: "Fallback Used", value: response["x-gateway"].fallback_used ? "Yes" : "No" },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex justify-between">
+                      <span className="text-muted-foreground">{label}</span>
+                      <span className="font-medium max-w-xs truncate">{value}</span>
+                    </div>
+                  ))}
                 </div>
               </Card>
 
@@ -241,8 +263,10 @@ export default function PlaygroundPage() {
 
           {!response && !error && (
             <Card>
-              <div className="py-12 text-center text-muted-foreground">
-                Send a request to see the response
+              <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span className="text-sm">Send a request to see the response</span>
+                <span className="text-xs">Ctrl+Enter to send</span>
               </div>
             </Card>
           )}

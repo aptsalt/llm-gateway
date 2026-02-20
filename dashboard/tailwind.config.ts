@@ -2,18 +2,33 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        border: "hsl(214.3, 31.8%, 91.4%)",
-        background: "hsl(0, 0%, 100%)",
-        foreground: "hsl(222.2, 84%, 4.9%)",
-        card: { DEFAULT: "hsl(0, 0%, 100%)", foreground: "hsl(222.2, 84%, 4.9%)" },
-        primary: { DEFAULT: "hsl(222.2, 47.4%, 11.2%)", foreground: "hsl(210, 40%, 98%)" },
-        secondary: { DEFAULT: "hsl(210, 40%, 96%)", foreground: "hsl(222.2, 47.4%, 11.2%)" },
-        muted: { DEFAULT: "hsl(210, 40%, 96%)", foreground: "hsl(215.4, 16.3%, 46.9%)" },
-        accent: { DEFAULT: "hsl(210, 40%, 96%)", foreground: "hsl(222.2, 47.4%, 11.2%)" },
-        destructive: { DEFAULT: "hsl(0, 84.2%, 60.2%)", foreground: "hsl(210, 40%, 98%)" },
+        border: "hsl(var(--border))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
+        primary: { DEFAULT: "hsl(var(--primary))", foreground: "hsl(var(--primary-foreground))" },
+        secondary: { DEFAULT: "hsl(var(--secondary))", foreground: "hsl(var(--secondary-foreground))" },
+        muted: { DEFAULT: "hsl(var(--muted))", foreground: "hsl(var(--muted-foreground))" },
+        accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
+        destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "pulse-slow": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: ".5" },
+        },
+      },
+      animation: {
+        "pulse-slow": "pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },

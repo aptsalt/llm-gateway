@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/card";
 import { StatusBadge } from "@/components/status-badge";
+import { CardSkeleton, ChartSkeleton, TableSkeleton } from "@/components/skeleton";
 import { formatCost, formatNumber, formatLatency } from "@/lib/utils";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -39,6 +40,7 @@ export default function OverviewPage() {
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [cacheStats, setCacheStats] = useState<CacheStatsData | null>(null);
   const [budget, setBudget] = useState<BudgetData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,15 +55,36 @@ export default function OverviewPage() {
         if (provRes.status === "fulfilled" && provRes.value) setProviders(provRes.value as ProviderStatus[]);
         if (cacheRes.status === "fulfilled" && cacheRes.value) setCacheStats(cacheRes.value as CacheStatsData);
         if (budgetRes.status === "fulfilled" && budgetRes.value) setBudget(budgetRes.value as BudgetData);
+        setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch data");
       }
+      setLoading(false);
     }
 
     fetchData();
     const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="mt-1 text-muted-foreground">Real-time overview of your LLM Gateway</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
+        <TableSkeleton rows={3} cols={4} />
+      </div>
+    );
+  }
 
   const healthyCount = providers.filter((p) => p.healthy).length;
   const totalModels = providers.reduce((sum, p) => sum + p.modelCount, 0);
@@ -88,7 +111,7 @@ export default function OverviewPage() {
       </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
           Gateway not reachable: {error}. Make sure the gateway is running on {GATEWAY_URL}
         </div>
       )}
@@ -114,7 +137,7 @@ export default function OverviewPage() {
             <CardTitle className="text-2xl">{totalModels}</CardTitle>
           </CardHeader>
           <p className="text-sm text-muted-foreground">
-            Across {providers.length} providers
+            Across {providers.length} provider{providers.length !== 1 ? "s" : ""}
           </p>
         </Card>
 
@@ -126,18 +149,20 @@ export default function OverviewPage() {
             </CardTitle>
           </CardHeader>
           <p className="text-sm text-muted-foreground">
-            {cacheStats ? `${cacheStats.totalEntries} cached entries` : "Cache not available"}
+            {cacheStats ? `${cacheStats.totalEntries} cached entries` : "Redis not connected"}
           </p>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardDescription>Cost Savings</CardDescription>
+            <CardDescription>Token Usage</CardDescription>
             <CardTitle className="text-2xl">
-              {cacheStats ? formatCost(cacheStats.estimatedSavingsUsd) : "N/A"}
+              {formatNumber(budget?.tokensUsed ?? 0)}
             </CardTitle>
           </CardHeader>
-          <p className="text-sm text-muted-foreground">From semantic caching</p>
+          <p className="text-sm text-muted-foreground">
+            {budget?.costUsed === 0 ? "Local models = free" : formatCost(budget?.costUsed)}
+          </p>
         </Card>
       </div>
 
@@ -149,15 +174,21 @@ export default function OverviewPage() {
             <CardDescription>Average response time by provider</CardDescription>
           </CardHeader>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={providerLatencyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis label={{ value: "ms", angle: -90, position: "insideLeft" }} />
-                <Tooltip formatter={(val: number) => formatLatency(val)} />
-                <Bar dataKey="latency" fill="#0088FE" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {providerLatencyData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={providerLatencyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} label={{ value: "ms", angle: -90, position: "insideLeft", style: { fill: "hsl(var(--muted-foreground))" } }} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--foreground))" }} formatter={(val: number) => formatLatency(val)} />
+                  <Bar dataKey="latency" fill="#0088FE" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                No provider data yet
+              </div>
+            )}
           </div>
         </Card>
 
@@ -182,13 +213,15 @@ export default function OverviewPage() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--foreground))" }} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground">
-                No cache data yet
+              <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+                <span className="text-sm">No cache data yet</span>
+                <span className="text-xs">Enable Redis for semantic caching</span>
               </div>
             )}
           </div>
