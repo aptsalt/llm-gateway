@@ -39,6 +39,28 @@
 
 ---
 
+## Dashboard Preview
+
+<table>
+  <tr>
+    <td><img src="screenshots/01-dashboard-overview.png" alt="Dashboard Overview" width="400"/><br/><b>Overview</b> — Provider health, cache stats, latency, budget at a glance</td>
+    <td><img src="screenshots/02-providers.png" alt="Providers" width="400"/><br/><b>Providers</b> — Real-time latency chart and provider health status</td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/03-routing.png" alt="Routing" width="400"/><br/><b>Routing</b> — Strategy selector, weight sliders, constraints, fallback chain</td>
+    <td><img src="screenshots/04-api-keys.png" alt="API Keys" width="400"/><br/><b>API Keys</b> — Key management with per-key budget limits</td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/05-analytics.png" alt="Analytics" width="400"/><br/><b>Analytics</b> — Budget usage, provider costs, token consumption breakdown</td>
+    <td><img src="screenshots/06-playground.png" alt="Playground" width="400"/><br/><b>Playground</b> — Test prompts with different models and routing strategies</td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="screenshots/07-benchmarks.png" alt="Benchmarks" width="400"/><br/><b>Benchmarks</b> — 14 tasks across 5 categories for data-driven model selection</td>
+  </tr>
+</table>
+
+---
+
 ## The Problem
 
 Most teams deploying LLMs either:
