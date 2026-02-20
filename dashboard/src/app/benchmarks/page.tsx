@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/card";
 import { StatusBadge } from "@/components/status-badge";
+import { toast } from "sonner";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, RadarChart, Radar, PolarGrid,
@@ -118,14 +119,16 @@ export default function BenchmarksPage() {
       const body: Record<string, unknown> = {};
       if (selectedCategories.length > 0) body.categories = selectedCategories;
 
-      await fetch(`${GATEWAY_URL}/api/benchmarks/run`, {
+      const res = await fetch(`${GATEWAY_URL}/api/benchmarks/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+      if (res.ok) toast.success("Benchmark started");
+      else toast.error("Failed to start benchmark");
       await fetchStatus();
     } catch {
-      // Ignore
+      toast.error("Failed to start benchmark");
     }
     setIsStarting(false);
   };

@@ -113,7 +113,7 @@ export default function RoutingPage() {
                       weights: { ...prev.weights!, [key]: val },
                     } : null);
                   }}
-                  className="w-full"
+                  className="w-full accent-primary"
                 />
               </div>
             ))}

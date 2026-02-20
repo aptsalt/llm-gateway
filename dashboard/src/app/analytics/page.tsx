@@ -241,7 +241,7 @@ export default function AnalyticsPage() {
             <div className="h-64 px-2">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={benchScoreData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" domain={[0, 100]} />
                   <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(val: number, name: string) =>
@@ -264,7 +264,7 @@ export default function AnalyticsPage() {
             <div className="h-64 px-2">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={tokenEfficiencyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis />
                   <Tooltip />
@@ -287,7 +287,7 @@ export default function AnalyticsPage() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={modelHitsData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
@@ -343,7 +343,7 @@ export default function AnalyticsPage() {
             <div className="h-64 px-2">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={providerModelData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="name" />
                   <YAxis yAxisId="left" label={{ value: "models", angle: -90, position: "insideLeft" }} />
                   <YAxis yAxisId="right" orientation="right" label={{ value: "ms", angle: 90, position: "insideRight" }} />

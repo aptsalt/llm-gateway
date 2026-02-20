@@ -12,9 +12,9 @@ export function StatusBadge({ status, label }: StatusBadgeProps) {
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
-        status === "healthy" && "bg-green-100 text-green-800",
-        status === "degraded" && "bg-yellow-100 text-yellow-800",
-        status === "unhealthy" && "bg-red-100 text-red-800"
+        status === "healthy" && "bg-green-500/10 text-green-700 dark:text-green-400",
+        status === "degraded" && "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
+        status === "unhealthy" && "bg-red-500/10 text-red-700 dark:text-red-400"
       )}
     >
       <span
