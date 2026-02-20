@@ -111,6 +111,8 @@ const DEFAULT_PROFILES: ModelProfile[] = [
 
 export class CapabilityMap {
   private profiles: Map<string, ModelProfile> = new Map();
+  private aliases: Map<string, string> = new Map();
+  private latencyHistory: Map<string, number[]> = new Map();
 
   constructor() {
     for (const profile of DEFAULT_PROFILES) {
@@ -119,7 +121,8 @@ export class CapabilityMap {
   }
 
   getProfile(provider: string, modelId: string): ModelProfile | undefined {
-    return this.profiles.get(`${provider}:${modelId}`);
+    const resolvedId = this.aliases.get(modelId) ?? modelId;
+    return this.profiles.get(`${provider}:${resolvedId}`);
   }
 
   getAllProfiles(): ModelProfile[] {
@@ -135,15 +138,47 @@ export class CapabilityMap {
   }
 
   updateLatency(provider: string, modelId: string, latencyMs: number): void {
-    const profile = this.profiles.get(`${provider}:${modelId}`);
+    const key = `${provider}:${modelId}`;
+    const profile = this.profiles.get(key);
     if (profile) {
       // Exponential moving average
       profile.avgLatencyMs = profile.avgLatencyMs * 0.8 + latencyMs * 0.2;
     }
+
+    // Store history for percentile calculations
+    const history = this.latencyHistory.get(key) ?? [];
+    history.push(latencyMs);
+    if (history.length > 100) history.shift();
+    this.latencyHistory.set(key, history);
+  }
+
+  getLatencyPercentiles(provider: string, modelId: string): { p50: number; p95: number; p99: number } | undefined {
+    const history = this.latencyHistory.get(`${provider}:${modelId}`);
+    if (!history || history.length === 0) return undefined;
+    const sorted = [...history].sort((a, b) => a - b);
+    const percentile = (p: number) => sorted[Math.ceil((p / 100) * sorted.length) - 1] ?? 0;
+    return { p50: percentile(50), p95: percentile(95), p99: percentile(99) };
   }
 
   addProfile(profile: ModelProfile): void {
     this.profiles.set(`${profile.provider}:${profile.modelId}`, profile);
+  }
+
+  addAlias(alias: string, modelId: string): void {
+    this.aliases.set(alias, modelId);
+  }
+
+  resolveAlias(modelId: string): string {
+    return this.aliases.get(modelId) ?? modelId;
+  }
+
+  getModelCount(): number {
+    return this.profiles.size;
+  }
+
+  getBestModelForCapability(capability: ModelCapability): ModelProfile | undefined {
+    return this.getProfilesByCapability(capability)
+      .sort((a, b) => b.qualityScore - a.qualityScore)[0];
   }
 }
 

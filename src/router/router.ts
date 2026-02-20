@@ -30,6 +30,7 @@ export class Router {
     const strategy = (request["x-routing-strategy"] as RoutingStrategy | undefined) ?? this.config.strategy;
     const config = STRATEGY_PRESETS[strategy] ?? this.config;
     const classification = classifyRequest(request.messages);
+    const preferredProvider = request["x-prefer-provider"];
 
     // If a specific model is requested (not virtual), try to find its provider
     const isVirtualModel = ["auto", "fast", "cheap", "quality"].includes(request.model);
@@ -43,6 +44,28 @@ export class Router {
           score: 1,
           reasoning: `Direct model request: ${request.model}`,
         };
+      }
+    }
+
+    // If a preferred provider is specified and healthy, prioritize it
+    if (preferredProvider) {
+      const preferred = this.registry.get(preferredProvider);
+      if (preferred && this.registry.isHealthy(preferredProvider)) {
+        const candidates = this.getCandidates(classification.requiredCapabilities, config)
+          .filter((p) => p.provider === preferredProvider);
+        if (candidates.length > 0) {
+          const best = candidates.sort((a, b) =>
+            this.scoreCandidate(b, config, classification.complexity === "complex") -
+            this.scoreCandidate(a, config, classification.complexity === "complex")
+          )[0]!;
+          return {
+            provider: preferred,
+            modelId: best.modelId,
+            strategy,
+            score: this.scoreCandidate(best, config, classification.complexity === "complex"),
+            reasoning: `Preferred provider: ${preferredProvider} → ${best.modelId} (complexity: ${classification.complexity})`,
+          };
+        }
       }
     }
 

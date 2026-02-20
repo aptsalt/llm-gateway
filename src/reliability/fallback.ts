@@ -53,8 +53,9 @@ export class FallbackChain {
       };
     }
 
-    // Try fallback providers
+    // Try fallback providers with exponential backoff between retries
     const remainingProviders = fallbackChain.filter((id) => id !== primaryProvider.id);
+    let retryIndex = 0;
 
     for (const providerId of remainingProviders) {
       if (attempts.length >= this.maxRetries + 1) break;
@@ -73,8 +74,15 @@ export class FallbackChain {
       if (!provider) continue;
       if (!this.registry.isHealthy(providerId)) continue;
 
+      // Exponential backoff: 100ms, 200ms, 400ms...
+      if (retryIndex > 0) {
+        const backoffMs = Math.min(100 * Math.pow(2, retryIndex - 1), 2000);
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
+      }
+
       const result = await this.tryProvider(provider, request);
       attempts.push(result);
+      retryIndex++;
 
       if (result.success) {
         return {
@@ -87,7 +95,7 @@ export class FallbackChain {
     }
 
     throw new Error(
-      `All providers failed. Attempts: ${attempts.map((a) => `${a.providerId}: ${a.errorMessage}`).join("; ")}`
+      `All providers failed after ${attempts.length} attempts. Details: ${attempts.map((a) => `${a.providerId}: ${a.errorMessage}`).join("; ")}`
     );
   }
 

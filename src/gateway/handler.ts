@@ -9,8 +9,10 @@ import type { BudgetEnforcer } from "../budget/budget.js";
 import type { ApiKeyManager } from "../budget/api-keys.js";
 import type { RateLimiter } from "../budget/rate-limiter.js";
 import type { RequestLogger } from "../observability/logger.js";
+import type { RequestTracker } from "../observability/request-tracker.js";
 import { ChatRequestSchema, type ChatResponse, type StreamChunk } from "./validator.js";
 import { recordRequest } from "../observability/metrics.js";
+import { ErrorCode, gatewayError } from "./errors.js";
 import type { RoutingConfig } from "../router/config.js";
 import { capabilityMap } from "../router/capabilities.js";
 
@@ -24,6 +26,7 @@ export interface HandlerDeps {
   apiKeyManager: ApiKeyManager | null;
   rateLimiter: RateLimiter | null;
   requestLogger: RequestLogger;
+  requestTracker?: RequestTracker;
   routingConfig: RoutingConfig;
 }
 
@@ -38,13 +41,7 @@ export function createChatHandler(deps: HandlerDeps) {
       const parseResult = ChatRequestSchema.safeParse(body);
       if (!parseResult.success) {
         return c.json(
-          {
-            error: {
-              message: "Invalid request body",
-              type: "invalid_request_error",
-              details: parseResult.error.flatten(),
-            },
-          },
+          gatewayError("Invalid request body", ErrorCode.INVALID_REQUEST, parseResult.error.flatten()),
           400
         );
       }
@@ -57,22 +54,14 @@ export function createChatHandler(deps: HandlerDeps) {
       if (apiKeyHeader && deps.apiKeyManager) {
         apiKeyRecord = await deps.apiKeyManager.validateKey(apiKeyHeader);
         if (!apiKeyRecord) {
-          return c.json(
-            { error: { message: "Invalid API key", type: "authentication_error" } },
-            401
-          );
+          return c.json(gatewayError("Invalid API key", ErrorCode.AUTHENTICATION), 401);
         }
 
         // Budget check
         const budgetCheck = deps.budgetEnforcer.checkBudget(apiKeyRecord);
         if (!budgetCheck.allowed) {
           return c.json(
-            {
-              error: {
-                message: budgetCheck.reason,
-                type: "budget_exceeded",
-              },
-            },
+            gatewayError(budgetCheck.reason ?? "Budget exceeded", ErrorCode.BUDGET_EXCEEDED),
             429
           );
         }
@@ -85,10 +74,10 @@ export function createChatHandler(deps: HandlerDeps) {
           );
           if (!rateResult.allowed) {
             c.header("Retry-After", Math.ceil((rateResult.retryAfterMs ?? 60000) / 1000).toString());
-            return c.json(
-              { error: { message: "Rate limit exceeded", type: "rate_limit_error" } },
-              429
-            );
+            c.header("X-RateLimit-Limit", String(apiKeyRecord.rateLimitRpm));
+            c.header("X-RateLimit-Remaining", String(rateResult.remaining ?? 0));
+            c.header("X-RateLimit-Reset", String(Math.ceil((rateResult.resetInMs ?? 60000) / 1000)));
+            return c.json(gatewayError("Rate limit exceeded", ErrorCode.RATE_LIMITED), 429);
           }
         }
       }
@@ -239,6 +228,9 @@ export function createChatHandler(deps: HandlerDeps) {
     } catch (error) {
       const latencyMs = Date.now() - startTime;
       const message = error instanceof Error ? error.message : "Internal server error";
+      const isProviderError = message.includes("All providers failed");
+      const errorType = isProviderError ? ErrorCode.ALL_PROVIDERS_FAILED : ErrorCode.SERVER_ERROR;
+      const statusCode = isProviderError ? 502 : 500;
 
       deps.requestLogger.log({
         requestId,
@@ -252,19 +244,11 @@ export function createChatHandler(deps: HandlerDeps) {
         costUsd: 0,
         cacheHit: false,
         fallbackUsed: false,
-        statusCode: 500,
+        statusCode,
         errorMessage: message,
       });
 
-      return c.json(
-        {
-          error: {
-            message,
-            type: "server_error",
-          },
-        },
-        500
-      );
+      return c.json(gatewayError(message, errorType), statusCode);
     }
   };
 }

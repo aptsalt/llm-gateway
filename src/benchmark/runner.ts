@@ -137,6 +137,9 @@ export class BenchmarkRunner {
       ],
       max_tokens: task.maxTokens,
       temperature: 0.1, // Low temperature for consistent benchmark results
+      stream: false,
+      n: 1,
+      "x-cache": false,
     };
 
     const start = performance.now();

@@ -1,6 +1,8 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { compress } from "hono/compress";
+import { nanoid } from "nanoid";
 import { Redis } from "ioredis";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
@@ -27,15 +29,33 @@ import { metricsRegistry } from "./observability/metrics.js";
 import { createChatHandler, type HandlerDeps } from "./gateway/handler.js";
 import { BenchmarkRunner } from "./benchmark/runner.js";
 import { ALL_BENCHMARK_TASKS, CATEGORIES } from "./benchmark/tasks.js";
+import { EmbeddingRequestSchema } from "./gateway/validator.js";
+import { RequestTracker } from "./observability/request-tracker.js";
 
 const { Pool } = pg;
+const startedAt = Date.now();
 
 export async function createApp() {
   const app = new Hono();
+  const requestTracker = new RequestTracker();
 
   // Middleware
   app.use("*", cors());
+  app.use("*", compress());
   app.use("*", logger());
+
+  // Request ID and response timing middleware
+  app.use("*", async (c, next) => {
+    const requestId = c.req.header("X-Request-ID") ?? nanoid();
+    const start = performance.now();
+    requestTracker.track(requestId);
+    c.header("X-Request-ID", requestId);
+    await next();
+    const duration = performance.now() - start;
+    c.header("X-Response-Time", `${duration.toFixed(2)}ms`);
+    c.header("X-Powered-By", "llm-gateway");
+    requestTracker.complete(requestId);
+  });
 
   // Initialize infrastructure
   let redis: Redis | null = null;
@@ -87,7 +107,10 @@ export async function createApp() {
   const cacheStats = redis ? new CacheStats(redis) : null;
 
   // Initialize budget
-  const budgetEnforcer = new BudgetEnforcer();
+  const budgetEnforcer = new BudgetEnforcer({
+    monthlyUsd: env.GLOBAL_MONTHLY_USD_BUDGET,
+    monthlyTokens: env.GLOBAL_MONTHLY_TOKEN_BUDGET,
+  });
   const apiKeyManager = db ? new ApiKeyManager(db as any) : null;
   const rateLimiter = redis ? new RateLimiter(redis) : null;
 
@@ -106,6 +129,7 @@ export async function createApp() {
     apiKeyManager,
     rateLimiter,
     requestLogger,
+    requestTracker,
     routingConfig: DEFAULT_ROUTING_CONFIG,
   };
 
@@ -131,17 +155,59 @@ export async function createApp() {
     });
   });
 
+  // Embeddings endpoint (OpenAI-compatible)
+  app.post("/v1/embeddings", async (c) => {
+    const body = await c.req.json();
+    const parseResult = EmbeddingRequestSchema.safeParse(body);
+    if (!parseResult.success) {
+      return c.json({
+        error: { message: "Invalid request body", type: "invalid_request_error", details: parseResult.error.flatten() },
+      }, 400);
+    }
+
+    const inputs = Array.isArray(parseResult.data.input) ? parseResult.data.input : [parseResult.data.input];
+    const embeddings = await Promise.all(inputs.map((text) => embedder.embed(text)));
+
+    return c.json({
+      object: "list",
+      data: embeddings.map((embedding, index) => ({
+        object: "embedding",
+        embedding,
+        index,
+      })),
+      model: parseResult.data.model,
+      usage: {
+        prompt_tokens: inputs.reduce((acc, t) => acc + Math.ceil(t.length / 4), 0),
+        total_tokens: inputs.reduce((acc, t) => acc + Math.ceil(t.length / 4), 0),
+      },
+    });
+  });
+
   // Health endpoint
   app.get("/health", async (c) => {
     const healthResults = await registry.runHealthChecks();
-    const allHealthy = Array.from(healthResults.values()).some((h) => h.healthy);
+    const anyHealthy = Array.from(healthResults.values()).some((h) => h.healthy);
+    const healthyCount = Array.from(healthResults.values()).filter((h) => h.healthy).length;
+    const totalCount = healthResults.size;
     return c.json(
       {
-        status: allHealthy ? "ok" : "degraded",
-        providers: Object.fromEntries(healthResults),
+        status: anyHealthy ? "ok" : "degraded",
+        version: "1.1.0",
+        uptime: Math.floor((Date.now() - startedAt) / 1000),
+        activeRequests: requestTracker.getActiveCount(),
+        providers: {
+          healthy: healthyCount,
+          total: totalCount,
+          details: Object.fromEntries(healthResults),
+        },
+        infrastructure: {
+          redis: redis !== null,
+          postgres: db !== null,
+          cache: semanticCache !== null,
+        },
         timestamp: new Date().toISOString(),
       },
-      allHealthy ? 200 : 503
+      anyHealthy ? 200 : 503
     );
   });
 
@@ -279,23 +345,75 @@ export async function createApp() {
     return c.text(metrics);
   });
 
+  // Analytics endpoint
+  app.get("/api/analytics", (c) => {
+    const stats = requestTracker.getStats();
+    return c.json({
+      ...stats,
+      budget: budgetEnforcer.getGlobalUsage(),
+    });
+  });
+
+  // Analytics summary (last N minutes)
+  app.get("/api/analytics/summary", (c) => {
+    return c.json(requestTracker.getStats());
+  });
+
   // Root
   app.get("/", (c) => {
     return c.json({
       name: "llm-gateway",
-      version: "1.0.0",
-      description: "Smart LLM API Gateway",
+      version: "1.1.0",
+      description: "Smart LLM API Gateway — cost-based routing, semantic caching, token budgets, multi-provider failover",
+      uptime: Math.floor((Date.now() - startedAt) / 1000),
       endpoints: {
-        chat: "POST /v1/chat/completions",
-        models: "GET /v1/models",
-        health: "GET /health",
-        metrics: "GET /metrics",
-        admin: "/api/admin/*",
+        "OpenAI Compatible": {
+          chat: "POST /v1/chat/completions",
+          embeddings: "POST /v1/embeddings",
+          models: "GET /v1/models",
+        },
+        "Gateway": {
+          health: "GET /health",
+          metrics: "GET /metrics",
+          providers: "GET /api/providers",
+          analytics: "GET /api/analytics",
+          cache: "GET /api/cache/stats",
+          circuitBreakers: "GET /api/circuit-breakers",
+          budget: "GET /api/budget",
+          benchmarks: "GET /api/benchmarks",
+        },
+        "Admin (auth required)": {
+          keys: "POST/GET/DELETE /api/admin/keys",
+          routing: "GET/PUT /api/admin/routing",
+        },
       },
+      docs: "https://github.com/aptsalt/llm-gateway",
     });
   });
 
-  return { app, cleanup: () => {
+  // 404 handler
+  app.notFound((c) => {
+    return c.json({
+      error: {
+        message: `Route not found: ${c.req.method} ${c.req.path}`,
+        type: "not_found",
+        hint: "GET / for available endpoints",
+      },
+    }, 404);
+  });
+
+  // Global error handler
+  app.onError((err, c) => {
+    console.error("Unhandled error:", err);
+    return c.json({
+      error: {
+        message: env.NODE_ENV === "production" ? "Internal server error" : err.message,
+        type: "server_error",
+      },
+    }, 500);
+  });
+
+  return { app, requestTracker, cleanup: () => {
     registry.stopHealthCheckLoop();
     requestLogger.stopPeriodicFlush();
     redis?.disconnect();
