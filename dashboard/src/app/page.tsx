@@ -45,14 +45,14 @@ export default function OverviewPage() {
     async function fetchData() {
       try {
         const [provRes, cacheRes, budgetRes] = await Promise.allSettled([
-          fetch(`${GATEWAY_URL}/api/providers`).then((r) => r.json()),
-          fetch(`${GATEWAY_URL}/api/cache/stats`).then((r) => r.json()),
-          fetch(`${GATEWAY_URL}/api/budget`).then((r) => r.json()),
+          fetch(`${GATEWAY_URL}/api/providers`).then((r) => r.ok ? r.json() : null),
+          fetch(`${GATEWAY_URL}/api/cache/stats`).then((r) => r.ok ? r.json() : null),
+          fetch(`${GATEWAY_URL}/api/budget`).then((r) => r.ok ? r.json() : null),
         ]);
 
-        if (provRes.status === "fulfilled") setProviders(provRes.value as ProviderStatus[]);
-        if (cacheRes.status === "fulfilled") setCacheStats(cacheRes.value as CacheStatsData);
-        if (budgetRes.status === "fulfilled") setBudget(budgetRes.value as BudgetData);
+        if (provRes.status === "fulfilled" && provRes.value) setProviders(provRes.value as ProviderStatus[]);
+        if (cacheRes.status === "fulfilled" && cacheRes.value) setCacheStats(cacheRes.value as CacheStatsData);
+        if (budgetRes.status === "fulfilled" && budgetRes.value) setBudget(budgetRes.value as BudgetData);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch data");
       }

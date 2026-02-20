@@ -25,6 +25,8 @@ import { RateLimiter } from "./budget/rate-limiter.js";
 import { RequestLogger } from "./observability/logger.js";
 import { metricsRegistry } from "./observability/metrics.js";
 import { createChatHandler, type HandlerDeps } from "./gateway/handler.js";
+import { BenchmarkRunner } from "./benchmark/runner.js";
+import { ALL_BENCHMARK_TASKS, CATEGORIES } from "./benchmark/tasks.js";
 
 const { Pool } = pg;
 
@@ -178,6 +180,47 @@ export async function createApp() {
   // Budget status
   app.get("/api/budget", (c) => {
     return c.json(budgetEnforcer.getGlobalUsage());
+  });
+
+  // === Benchmark API ===
+  const benchmarkRunner = new BenchmarkRunner(registry);
+
+  app.get("/api/benchmarks", (c) => {
+    return c.json({
+      categories: CATEGORIES,
+      totalTasks: ALL_BENCHMARK_TASKS.length,
+      tasks: ALL_BENCHMARK_TASKS.map((t) => ({
+        id: t.id,
+        category: t.category,
+        name: t.name,
+        scoring: t.scoring,
+      })),
+    });
+  });
+
+  app.get("/api/benchmarks/status", (c) => {
+    return c.json(benchmarkRunner.getStatus());
+  });
+
+  app.get("/api/benchmarks/results", (c) => {
+    return c.json(benchmarkRunner.getLatestResults());
+  });
+
+  app.post("/api/benchmarks/run", async (c) => {
+    if (benchmarkRunner.isRunning()) {
+      return c.json({ error: "Benchmark already running", status: benchmarkRunner.getStatus() }, 409);
+    }
+
+    const body = await c.req.json().catch(() => ({}));
+    const config = body as { models?: string[]; categories?: string[] };
+
+    // Run benchmark in background
+    benchmarkRunner.run(config).catch((err) => {
+      console.error("Benchmark run failed:", err);
+    });
+
+    // Return immediately with status
+    return c.json({ message: "Benchmark started", status: benchmarkRunner.getStatus() }, 202);
   });
 
   // === Admin API (requires admin key) ===

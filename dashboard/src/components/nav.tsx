@@ -11,6 +11,7 @@ const navItems = [
   { href: "/keys", label: "API Keys" },
   { href: "/analytics", label: "Analytics" },
   { href: "/playground", label: "Playground" },
+  { href: "/benchmarks", label: "Benchmarks" },
 ];
 
 export function Nav() {
