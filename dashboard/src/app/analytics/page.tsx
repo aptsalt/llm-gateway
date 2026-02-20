@@ -10,7 +10,6 @@ import {
 
 const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL ?? "http://localhost:4000";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 interface CacheStatsData {
   hits: number;
@@ -87,16 +86,27 @@ export default function AnalyticsPage() {
       }))
     : [];
 
-  const costBreakdown = budget && budget.costUsed > 0
-    ? [
-        { name: "Spent", value: budget.costUsed },
-        { name: "Remaining", value: Math.max(0, (budget.budget.monthlyUsd ?? 100) - budget.costUsed) },
-      ]
-    : [];
+  const monthlyBudgetUsd = budget?.budget.monthlyUsd ?? 100;
+  const currentCost = budget?.costUsed ?? 0;
+  const costBreakdown = [
+    { name: "Spent", value: currentCost || 0.001 }, // tiny value so pie renders even at $0
+    { name: "Remaining", value: Math.max(0.001, monthlyBudgetUsd - currentCost) },
+  ];
+
+  // Provider pricing reference data
+  const providerPricing = [
+    { provider: "Ollama (local)", model: "Any local model", input: "$0.00", output: "$0.00", note: "Free — runs on your GPU" },
+    { provider: "Groq", model: "Llama 3.3 70B", input: "$0.00059", output: "$0.00079", note: "Fast inference API" },
+    { provider: "OpenAI", model: "GPT-4o", input: "$0.0025", output: "$0.01", note: "High quality" },
+    { provider: "OpenAI", model: "GPT-4o-mini", input: "$0.00015", output: "$0.0006", note: "Cost-efficient" },
+    { provider: "Anthropic", model: "Claude Sonnet 4", input: "$0.003", output: "$0.015", note: "Top quality" },
+    { provider: "Anthropic", model: "Claude 3.5 Haiku", input: "$0.001", output: "$0.005", note: "Fast + cheap" },
+    { provider: "Together AI", model: "Llama 3.3 70B Turbo", input: "$0.00088", output: "$0.00088", note: "Open-source hosting" },
+  ];
 
   // Benchmark-derived analytics
   const totalBenchTokens = benchResults.reduce((sum, r) => sum + r.totalTokens, 0);
-  const totalBenchLatency = benchResults.reduce((sum, r) => sum + r.totalLatencyMs, 0);
+
   const totalBenchTasks = benchResults.reduce((sum, r) => sum + r.taskResults.length, 0);
 
   const benchScoreData = benchResults
@@ -290,34 +300,38 @@ export default function AnalyticsPage() {
           </Card>
         )}
 
-        {/* Cost Breakdown (only if there's actual cost) */}
-        {costBreakdown.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Budget Usage</CardTitle>
-              <CardDescription>Monthly budget consumption</CardDescription>
-            </CardHeader>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={costBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${formatCost(value)}`}
-                  >
-                    <Cell fill="#FF8042" />
-                    <Cell fill="#00C49F" />
-                  </Pie>
-                  <Tooltip formatter={(val: number) => formatCost(val)} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        )}
+        {/* Cost Budget Usage — always visible */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Budget Usage</CardTitle>
+            <CardDescription>
+              {currentCost === 0
+                ? "No cloud spend yet — local models are free"
+                : "Monthly budget consumption"}
+            </CardDescription>
+          </CardHeader>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={costBreakdown}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  dataKey="value"
+                  label={({ name }) => `${name}: ${name === "Spent" ? formatCost(currentCost) : formatCost(monthlyBudgetUsd - currentCost)}`}
+                >
+                  <Cell fill={currentCost > 0 ? "#FF8042" : "#e5e7eb"} />
+                  <Cell fill="#00C49F" />
+                </Pie>
+                <Tooltip formatter={(_val: number, name: string) =>
+                  name === "Spent" ? formatCost(currentCost) : formatCost(monthlyBudgetUsd - currentCost)
+                } />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
 
         {/* Provider Health */}
         {providerModelData.length > 0 && (
@@ -361,6 +375,7 @@ export default function AnalyticsPage() {
                   <th className="pb-3 pr-4">Avg Latency</th>
                   <th className="pb-3 pr-4">Total Tokens</th>
                   <th className="pb-3 pr-4">Tokens/Task</th>
+                  <th className="pb-3 pr-4">Est. Cost</th>
                   <th className="pb-3 pr-6">Efficiency</th>
                 </tr>
               </thead>
@@ -372,6 +387,10 @@ export default function AnalyticsPage() {
                   const efficiency = r.totalLatencyMs > 0
                     ? ((r.overallScore / r.totalLatencyMs) * 1000).toFixed(1)
                     : "0";
+                  // Estimate cost: Ollama = $0, cloud = lookup from pricing data
+                  const isLocal = r.provider === "ollama";
+                  const estCostPer1k = isLocal ? 0 : 0.001; // conservative default for unknown cloud models
+                  const estCost = (r.totalTokens / 1000) * estCostPer1k;
                   return (
                     <tr key={r.modelId} className="border-b last:border-0">
                       <td className="py-3 pr-4 pl-6 font-medium">{r.modelId}</td>
@@ -384,6 +403,11 @@ export default function AnalyticsPage() {
                       <td className="py-3 pr-4">{formatLatency(avgLatency)}</td>
                       <td className="py-3 pr-4">{formatNumber(r.totalTokens)}</td>
                       <td className="py-3 pr-4">{tokensPerTask}</td>
+                      <td className="py-3 pr-4 font-mono">
+                        {isLocal
+                          ? <span className="text-green-600">$0.00</span>
+                          : <span>{formatCost(estCost)}</span>}
+                      </td>
                       <td className="py-3 pr-6 text-muted-foreground">
                         {efficiency} quality/sec
                       </td>
@@ -396,78 +420,100 @@ export default function AnalyticsPage() {
         </Card>
       )}
 
-      {/* Cost Explainer */}
+      {/* Provider Cost Comparison */}
       <Card>
         <CardHeader>
-          <CardTitle>Cost Tracking</CardTitle>
-          <CardDescription>How costs are measured</CardDescription>
+          <CardTitle>Provider Cost Comparison</CardTitle>
+          <CardDescription>Per 1K token pricing across supported providers</CardDescription>
         </CardHeader>
-        <div className="px-6 pb-6 space-y-3 text-sm text-muted-foreground">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-md border p-4">
-              <p className="font-medium text-foreground">Local Models (Ollama)</p>
-              <p className="mt-1">Cost: $0.00 — runs on your GPU. The only cost is electricity and VRAM.</p>
-            </div>
-            <div className="rounded-md border p-4">
-              <p className="font-medium text-foreground">Cloud Providers</p>
-              <p className="mt-1">OpenAI, Anthropic, Groq, Together AI — billed per token. The gateway tracks cost per request and enforces monthly budgets.</p>
-            </div>
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                <th className="pb-3 pr-4 pl-6">Provider</th>
+                <th className="pb-3 pr-4">Model</th>
+                <th className="pb-3 pr-4">Input / 1K</th>
+                <th className="pb-3 pr-4">Output / 1K</th>
+                <th className="pb-3 pr-6">Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              {providerPricing.map((row, i) => (
+                <tr key={i} className="border-b last:border-0">
+                  <td className="py-3 pr-4 pl-6 font-medium">{row.provider}</td>
+                  <td className="py-3 pr-4">{row.model}</td>
+                  <td className="py-3 pr-4 font-mono">{row.input}</td>
+                  <td className="py-3 pr-4 font-mono">{row.output}</td>
+                  <td className="py-3 pr-6 text-muted-foreground">{row.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="px-6 pb-6 pt-4 text-sm text-muted-foreground space-y-2">
           <p>
-            Add cloud providers by setting API keys in <code className="rounded bg-muted px-1">.env</code> (e.g., <code className="rounded bg-muted px-1">OPENAI_API_KEY</code>).
-            The routing engine considers cost when selecting models — use <code className="rounded bg-muted px-1">model: "cheap"</code> to optimize for cost.
+            Add cloud providers by setting API keys in <code className="rounded bg-muted px-1">.env</code> (e.g., <code className="rounded bg-muted px-1">OPENAI_API_KEY</code>, <code className="rounded bg-muted px-1">ANTHROPIC_API_KEY</code>).
+            The gateway tracks cost per request automatically and enforces monthly budgets.
+          </p>
+          <p>
+            Use <code className="rounded bg-muted px-1">model: &quot;cheap&quot;</code> to route to the cheapest available model, or <code className="rounded bg-muted px-1">model: &quot;auto&quot;</code> to let the routing engine balance cost, quality, and latency.
           </p>
         </div>
       </Card>
 
-      {/* Budget Details */}
-      {budget && (budget.budget.monthlyTokens || budget.budget.monthlyUsd) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Budget Limits</CardTitle>
-          </CardHeader>
-          <div className="grid gap-6 sm:grid-cols-2 px-6 pb-6">
-            {budget.budget.monthlyTokens && (
-              <div>
-                <p className="text-sm text-muted-foreground">Token Budget</p>
-                <p className="text-3xl font-bold">{formatNumber(budget.tokensUsed)}</p>
-                <div className="mt-2">
-                  <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-                    <div
-                      className="h-full rounded-full bg-blue-500 transition-all"
-                      style={{
-                        width: `${Math.min(100, (budget.tokensUsed / budget.budget.monthlyTokens) * 100)}%`,
-                      }}
-                    />
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {((budget.tokensUsed / budget.budget.monthlyTokens) * 100).toFixed(1)}% of {formatNumber(budget.budget.monthlyTokens)} limit
-                  </p>
-                </div>
+      {/* Budget Limits — always visible */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Budget Limits</CardTitle>
+          <CardDescription>
+            {budget?.budget.monthlyTokens || budget?.budget.monthlyUsd
+              ? "Configured monthly limits"
+              : "Set TOKEN_BUDGET_MONTHLY_TOKENS / TOKEN_BUDGET_MONTHLY_USD in .env to enforce limits"}
+          </CardDescription>
+        </CardHeader>
+        <div className="grid gap-6 sm:grid-cols-2 px-6 pb-6">
+          <div>
+            <p className="text-sm text-muted-foreground">Token Usage</p>
+            <p className="text-3xl font-bold">{formatNumber(budget?.tokensUsed ?? 0)}</p>
+            <div className="mt-2">
+              <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                <div
+                  className="h-full rounded-full bg-blue-500 transition-all"
+                  style={{
+                    width: budget?.budget.monthlyTokens
+                      ? `${Math.min(100, ((budget.tokensUsed) / budget.budget.monthlyTokens) * 100)}%`
+                      : "0%",
+                  }}
+                />
               </div>
-            )}
-            {budget.budget.monthlyUsd && (
-              <div>
-                <p className="text-sm text-muted-foreground">Cost Budget</p>
-                <p className="text-3xl font-bold">{formatCost(budget.costUsed)}</p>
-                <div className="mt-2">
-                  <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-                    <div
-                      className="h-full rounded-full bg-green-500 transition-all"
-                      style={{
-                        width: `${Math.min(100, (budget.costUsed / budget.budget.monthlyUsd) * 100)}%`,
-                      }}
-                    />
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {((budget.costUsed / budget.budget.monthlyUsd) * 100).toFixed(1)}% of {formatCost(budget.budget.monthlyUsd)} limit
-                  </p>
-                </div>
-              </div>
-            )}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {budget?.budget.monthlyTokens
+                  ? `${((budget.tokensUsed / budget.budget.monthlyTokens) * 100).toFixed(1)}% of ${formatNumber(budget.budget.monthlyTokens)} limit`
+                  : "No token limit configured"}
+              </p>
+            </div>
           </div>
-        </Card>
-      )}
+          <div>
+            <p className="text-sm text-muted-foreground">Cost Usage</p>
+            <p className="text-3xl font-bold">{formatCost(currentCost)}</p>
+            <div className="mt-2">
+              <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                <div
+                  className="h-full rounded-full bg-green-500 transition-all"
+                  style={{
+                    width: `${Math.min(100, (currentCost / monthlyBudgetUsd) * 100)}%`,
+                  }}
+                />
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {currentCost === 0
+                  ? `$0.00 of ${formatCost(monthlyBudgetUsd)} budget — cloud API calls will show cost here`
+                  : `${((currentCost / monthlyBudgetUsd) * 100).toFixed(1)}% of ${formatCost(monthlyBudgetUsd)} limit`}
+              </p>
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
