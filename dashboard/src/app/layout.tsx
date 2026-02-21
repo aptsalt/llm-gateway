@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Nav } from "@/components/nav";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "LLM Gateway Dashboard",
-  description: "Multi-provider LLM gateway with smart routing, benchmarking, and cost tracking",
+  title: "RouterAI LLM Gateway",
+  description: "Multi-provider LLM gateway with smart routing, caching, and cost tracking",
 };
 
 export default function RootLayout({
@@ -16,10 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-background text-foreground antialiased">
+      <body className="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
         <ThemeProvider>
-          <Nav />
-          <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">{children}</main>
+          {children}
           <Toaster richColors position="bottom-right" />
         </ThemeProvider>
       </body>

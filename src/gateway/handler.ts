@@ -15,6 +15,8 @@ import { recordRequest } from "../observability/metrics.js";
 import { ErrorCode, gatewayError } from "./errors.js";
 import type { RoutingConfig } from "../router/config.js";
 import { capabilityMap } from "../router/capabilities.js";
+import type { TenantContext } from "../middleware/tenant.js";
+import { PLAN_LIMITS } from "../middleware/tenant.js";
 
 export interface HandlerDeps {
   registry: ProviderRegistry;
@@ -34,6 +36,7 @@ export function createChatHandler(deps: HandlerDeps) {
   return async (c: Context) => {
     const requestId = nanoid();
     const startTime = Date.now();
+    const tenant = c.get("tenant") as TenantContext | undefined;
 
     try {
       // Parse and validate request
@@ -57,7 +60,20 @@ export function createChatHandler(deps: HandlerDeps) {
           return c.json(gatewayError("Invalid API key", ErrorCode.AUTHENTICATION), 401);
         }
 
-        // Budget check
+        // Tenant budget check (org-level limits)
+        if (tenant) {
+          if (tenant.tokensUsedThisMonth >= tenant.monthlyTokenBudget) {
+            return c.json(
+              gatewayError(
+                `Organization monthly token budget exceeded (${tenant.tokensUsedThisMonth}/${tenant.monthlyTokenBudget})`,
+                ErrorCode.BUDGET_EXCEEDED
+              ),
+              429
+            );
+          }
+        }
+
+        // Per-key budget check
         const budgetCheck = deps.budgetEnforcer.checkBudget(apiKeyRecord);
         if (!budgetCheck.allowed) {
           return c.json(
@@ -66,15 +82,17 @@ export function createChatHandler(deps: HandlerDeps) {
           );
         }
 
-        // Rate limit check
-        if (deps.rateLimiter && apiKeyRecord.rateLimitRpm) {
-          const rateResult = await deps.rateLimiter.checkRequestRate(
-            apiKeyRecord.id.toString(),
-            apiKeyRecord.rateLimitRpm
-          );
+        // Rate limit check (use tenant plan limits if available)
+        const rpm = tenant
+          ? (PLAN_LIMITS[tenant.plan]?.rpm ?? apiKeyRecord.rateLimitRpm ?? 60)
+          : (apiKeyRecord.rateLimitRpm ?? 60);
+
+        if (deps.rateLimiter) {
+          const rateKey = tenant ? `${tenant.orgId}:${apiKeyRecord.id}` : apiKeyRecord.id.toString();
+          const rateResult = await deps.rateLimiter.checkRequestRate(rateKey, rpm);
           if (!rateResult.allowed) {
             c.header("Retry-After", Math.ceil((rateResult.retryAfterMs ?? 60000) / 1000).toString());
-            c.header("X-RateLimit-Limit", String(apiKeyRecord.rateLimitRpm));
+            c.header("X-RateLimit-Limit", String(rpm));
             c.header("X-RateLimit-Remaining", String(rateResult.remaining ?? 0));
             c.header("X-RateLimit-Reset", String(Math.ceil((rateResult.resetInMs ?? 60000) / 1000)));
             return c.json(gatewayError("Rate limit exceeded", ErrorCode.RATE_LIMITED), 429);
@@ -82,10 +100,14 @@ export function createChatHandler(deps: HandlerDeps) {
         }
       }
 
-      // Semantic cache lookup
-      if (request["x-cache"] && deps.semanticCache && !request.stream) {
+      // Semantic cache lookup (tenant-scoped)
+      const tenantCache = tenant && deps.semanticCache
+        ? deps.semanticCache.withOrg(String(tenant.orgId))
+        : deps.semanticCache;
+
+      if (request["x-cache"] && tenantCache && !request.stream) {
         const queryText = request.messages.map((m) => m.content).join("\n");
-        const cachedResponse = await deps.semanticCache.lookup(queryText, request.model);
+        const cachedResponse = await tenantCache.lookup(queryText, request.model);
         if (cachedResponse) {
           deps.cacheStats?.recordHit(request.model, cachedResponse["x-gateway"].cost_usd);
           const latencyMs = Date.now() - startTime;
@@ -105,6 +127,7 @@ export function createChatHandler(deps: HandlerDeps) {
           deps.requestLogger.log({
             requestId,
             apiKeyId: apiKeyRecord?.id,
+            orgId: tenant?.orgId,
             modelRequested: request.model,
             modelUsed: cachedResponse.model,
             provider: cachedResponse["x-gateway"].provider,
@@ -178,10 +201,10 @@ export function createChatHandler(deps: HandlerDeps) {
         },
       };
 
-      // Store in cache
-      if (request["x-cache"] && deps.semanticCache && !request.stream) {
+      // Store in cache (tenant-scoped)
+      if (request["x-cache"] && tenantCache && !request.stream) {
         const queryText = request.messages.map((m) => m.content).join("\n");
-        void deps.semanticCache.store(queryText, request.model, response);
+        void tenantCache.store(queryText, request.model, response);
       }
 
       // Record usage
@@ -206,6 +229,7 @@ export function createChatHandler(deps: HandlerDeps) {
       deps.requestLogger.log({
         requestId,
         apiKeyId: apiKeyRecord?.id,
+        orgId: tenant?.orgId,
         modelRequested: request.model,
         modelUsed: result.model,
         provider: provider.id,
@@ -234,6 +258,7 @@ export function createChatHandler(deps: HandlerDeps) {
 
       deps.requestLogger.log({
         requestId,
+        orgId: tenant?.orgId,
         modelRequested: "unknown",
         modelUsed: "none",
         provider: "none",

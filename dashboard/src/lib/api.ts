@@ -26,3 +26,13 @@ export async function fetchAdminApi<T>(path: string, adminKey: string, options?:
     },
   });
 }
+
+export async function fetchAuthApi<T>(path: string, token: string, options?: RequestInit): Promise<T> {
+  return fetchApi<T>(path, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...options?.headers,
+    },
+  });
+}

@@ -5,6 +5,7 @@ import { env } from "../env.js";
 export interface RequestLogEntry {
   requestId: string;
   apiKeyId?: number;
+  orgId?: number;
   modelRequested: string;
   modelUsed: string;
   provider: string;
@@ -72,6 +73,7 @@ export class RequestLogger {
         entries.map((e) => ({
           requestId: e.requestId,
           apiKeyId: e.apiKeyId,
+          orgId: e.orgId,
           modelRequested: e.modelRequested,
           modelUsed: e.modelUsed,
           provider: e.provider,

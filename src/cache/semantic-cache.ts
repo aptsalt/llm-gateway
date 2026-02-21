@@ -29,13 +29,21 @@ export class SemanticCache {
   private redis: Redis;
   private embedder: EmbeddingService;
   private config: CacheConfig;
-  private cacheKeyPrefix = "gw:cache:";
-  private indexKey = "gw:cache:index";
+  private cacheKeyPrefix: string;
+  private indexKey: string;
 
-  constructor(redis: Redis, embedder: EmbeddingService, config?: Partial<CacheConfig>) {
+  constructor(redis: Redis, embedder: EmbeddingService, config?: Partial<CacheConfig>, orgId?: string) {
     this.redis = redis;
     this.embedder = embedder;
     this.config = { ...DEFAULT_CONFIG, ...config };
+    // Namespace by org_id for multi-tenant isolation
+    const ns = orgId ? `gw:cache:${orgId}:` : "gw:cache:";
+    this.cacheKeyPrefix = ns;
+    this.indexKey = orgId ? `gw:cache:index:${orgId}` : "gw:cache:index";
+  }
+
+  withOrg(orgId: string): SemanticCache {
+    return new SemanticCache(this.redis, this.embedder, this.config, orgId);
   }
 
   async lookup(query: string, model: string): Promise<ChatResponse | null> {

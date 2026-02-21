@@ -23,6 +23,13 @@ const envSchema = z.object({
   GLOBAL_MONTHLY_TOKEN_BUDGET: z.coerce.number().optional(),
   // Routing
   DEFAULT_ROUTING_STRATEGY: z.enum(["cost", "quality", "latency", "balanced"]).default("balanced"),
+  // Stripe (SaaS billing)
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  // Supabase (SaaS auth/DB)
+  SUPABASE_URL: z.string().optional(),
+  SUPABASE_ANON_KEY: z.string().optional(),
+  SUPABASE_SERVICE_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

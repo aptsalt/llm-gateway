@@ -5,6 +5,7 @@ import { compress } from "hono/compress";
 import { nanoid } from "nanoid";
 import { Redis } from "ioredis";
 import { drizzle } from "drizzle-orm/node-postgres";
+import { eq } from "drizzle-orm";
 import pg from "pg";
 
 import { env } from "./env.js";
@@ -31,6 +32,8 @@ import { BenchmarkRunner } from "./benchmark/runner.js";
 import { ALL_BENCHMARK_TASKS, CATEGORIES } from "./benchmark/tasks.js";
 import { EmbeddingRequestSchema } from "./gateway/validator.js";
 import { RequestTracker } from "./observability/request-tracker.js";
+import { createTenantMiddleware } from "./middleware/tenant.js";
+import { organizations, orgMembers } from "./db/schema.js";
 
 const { Pool } = pg;
 const startedAt = Date.now();
@@ -53,7 +56,7 @@ export async function createApp() {
     await next();
     const duration = performance.now() - start;
     c.header("X-Response-Time", `${duration.toFixed(2)}ms`);
-    c.header("X-Powered-By", "llm-gateway");
+    c.header("X-Powered-By", "RouterAI Gateway");
     requestTracker.complete(requestId);
   });
 
@@ -82,6 +85,9 @@ export async function createApp() {
     console.warn("PostgreSQL not available, running without persistence:", error);
     db = null;
   }
+
+  // Tenant resolution middleware (must be after DB init)
+  app.use("/v1/*", createTenantMiddleware(db as any));
 
   // Initialize providers
   const registry = new ProviderRegistry();
@@ -192,7 +198,7 @@ export async function createApp() {
     return c.json(
       {
         status: anyHealthy ? "ok" : "degraded",
-        version: "1.1.0",
+        version: "2.0.0-saas",
         uptime: Math.floor((Date.now() - startedAt) / 1000),
         activeRequests: requestTracker.getActiveCount(),
         providers: {
@@ -338,6 +344,51 @@ export async function createApp() {
     return c.json({ success: true });
   });
 
+  // === SaaS Organization API ===
+  app.post("/api/org", adminAuth, async (c) => {
+    if (!db) return c.json({ error: "Database not available" }, 503);
+    const body = await c.req.json() as { name: string; slug: string; ownerId: string };
+
+    const [org] = await (db as any)
+      .insert(organizations)
+      .values({
+        name: body.name,
+        slug: body.slug,
+        ownerId: body.ownerId,
+      })
+      .returning();
+
+    // Create owner membership
+    await (db as any)
+      .insert(orgMembers)
+      .values({
+        orgId: org.id,
+        userId: body.ownerId,
+        role: "owner",
+      });
+
+    // Create initial API key for the org
+    const firstKey = apiKeyManager
+      ? await apiKeyManager.createKey({ name: "Default Key", orgId: org.id })
+      : null;
+
+    return c.json({ org, apiKey: firstKey }, 201);
+  });
+
+  app.get("/api/org/:id", async (c) => {
+    if (!db) return c.json({ error: "Database not available" }, 503);
+    const id = parseInt(c.req.param("id"), 10);
+
+    const [org] = await (db as any)
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, id))
+      .limit(1);
+
+    if (!org) return c.json({ error: "Organization not found" }, 404);
+    return c.json(org);
+  });
+
   // Prometheus metrics
   app.get("/metrics", async (c) => {
     c.header("Content-Type", metricsRegistry.contentType);
@@ -362,9 +413,9 @@ export async function createApp() {
   // Root
   app.get("/", (c) => {
     return c.json({
-      name: "llm-gateway",
-      version: "1.1.0",
-      description: "Smart LLM API Gateway — cost-based routing, semantic caching, token budgets, multi-provider failover",
+      name: "RouterAI Gateway",
+      version: "2.0.0-saas",
+      description: "Multi-tenant LLM API Gateway — cost-based routing, semantic caching, per-tenant budgets, multi-provider failover",
       uptime: Math.floor((Date.now() - startedAt) / 1000),
       endpoints: {
         "OpenAI Compatible": {
@@ -385,9 +436,10 @@ export async function createApp() {
         "Admin (auth required)": {
           keys: "POST/GET/DELETE /api/admin/keys",
           routing: "GET/PUT /api/admin/routing",
+          createOrg: "POST /api/org",
         },
       },
-      docs: "https://github.com/aptsalt/llm-gateway",
+      docs: "https://routerai.dev/docs",
     });
   });
 
