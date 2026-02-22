@@ -79,15 +79,15 @@ export default function RoutingPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Routing Configuration</h1>
-        <p className="mt-1 text-zinc-400">
+        <p className="mt-1 text-muted-foreground">
           Configure how the gateway selects providers
         </p>
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Routing Strategy</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Choose a preset or customize weights
           </CardDescription>
         </CardHeader>
@@ -112,7 +112,7 @@ export default function RoutingPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Cost Weight</label>
-                <span className="text-sm text-zinc-400">{(costWeight * 100).toFixed(0)}%</span>
+                <span className="text-sm text-muted-foreground">{(costWeight * 100).toFixed(0)}%</span>
               </div>
               <Slider
                 min={0}
@@ -121,7 +121,7 @@ export default function RoutingPage() {
                 value={costWeight}
                 onChange={(e) => handleCostChange(parseFloat(e.target.value))}
               />
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 Higher values prioritize cheaper providers
               </p>
             </div>
@@ -129,7 +129,7 @@ export default function RoutingPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Quality Weight</label>
-                <span className="text-sm text-zinc-400">{(qualityWeight * 100).toFixed(0)}%</span>
+                <span className="text-sm text-muted-foreground">{(qualityWeight * 100).toFixed(0)}%</span>
               </div>
               <Slider
                 min={0}
@@ -138,7 +138,7 @@ export default function RoutingPage() {
                 value={qualityWeight}
                 onChange={(e) => handleQualityChange(parseFloat(e.target.value))}
               />
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 Higher values prioritize better model quality
               </p>
             </div>
@@ -146,7 +146,7 @@ export default function RoutingPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Latency Weight</label>
-                <span className="text-sm text-zinc-400">{(latencyWeight * 100).toFixed(0)}%</span>
+                <span className="text-sm text-muted-foreground">{(latencyWeight * 100).toFixed(0)}%</span>
               </div>
               <Slider
                 min={0}
@@ -155,23 +155,23 @@ export default function RoutingPage() {
                 value={latencyWeight}
                 onChange={(e) => handleLatencyChange(parseFloat(e.target.value))}
               />
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 Higher values prioritize faster responses
               </p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-zinc-800 p-4">
+          <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div>
               <p className="text-sm font-medium">Prefer Local Models</p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 Prioritize Ollama models when available
               </p>
             </div>
             <button
               onClick={() => setPreferLocal(!preferLocal)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                preferLocal ? "bg-blue-500" : "bg-zinc-700"
+                preferLocal ? "bg-blue-500" : "bg-accent"
               }`}
             >
               <span
@@ -188,38 +188,38 @@ export default function RoutingPage() {
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>How It Works</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Understanding the routing algorithm
           </CardDescription>
         </CardHeader>
         <div className="p-6 space-y-4 text-sm">
           <div>
             <h3 className="font-medium mb-2">Weighted Score Calculation</h3>
-            <p className="text-zinc-400">
+            <p className="text-muted-foreground">
               Each provider receives a score based on the weighted combination of cost, quality, and latency.
               The provider with the highest score is selected for each request.
             </p>
           </div>
           <div>
             <h3 className="font-medium mb-2">Cost Factor</h3>
-            <p className="text-zinc-400">
+            <p className="text-muted-foreground">
               Providers with lower per-token costs score higher on this metric.
               Ollama (local) models have zero cost.
             </p>
           </div>
           <div>
             <h3 className="font-medium mb-2">Quality Factor</h3>
-            <p className="text-zinc-400">
+            <p className="text-muted-foreground">
               Based on benchmark scores for reasoning, coding, and general capabilities.
               GPT-4 and Claude models typically score highest.
             </p>
           </div>
           <div>
             <h3 className="font-medium mb-2">Latency Factor</h3>
-            <p className="text-zinc-400">
+            <p className="text-muted-foreground">
               Measured as average response time. Groq and local models are typically fastest.
             </p>
           </div>

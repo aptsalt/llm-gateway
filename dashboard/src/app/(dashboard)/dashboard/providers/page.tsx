@@ -74,12 +74,12 @@ export default function ProvidersPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Providers</h1>
-        <p className="mt-1 text-zinc-400">Manage your LLM provider connections</p>
+        <p className="mt-1 text-muted-foreground">Manage your LLM provider connections</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {providers.map((provider) => (
-          <Card key={provider.id} className="bg-zinc-900 border-zinc-800">
+          <Card key={provider.id} className="bg-card border-border">
             <CardHeader>
               <div className="flex items-center justify-between mb-2">
                 <CardTitle className="text-lg">{provider.name}</CardTitle>
@@ -91,15 +91,15 @@ export default function ProvidersPage() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-400">Latency</span>
+                  <span className="text-muted-foreground">Latency</span>
                   <span>{provider.latencyMs > 0 ? `${provider.latencyMs}ms` : "N/A"}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-400">Models</span>
+                  <span className="text-muted-foreground">Models</span>
                   <span>{provider.modelCount}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-400">API Key</span>
+                  <span className="text-muted-foreground">API Key</span>
                   <Badge variant={provider.hasKey ? "default" : "outline"}>
                     {provider.hasKey ? "Configured" : "Missing"}
                   </Badge>
@@ -119,10 +119,10 @@ export default function ProvidersPage() {
         ))}
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Latency Over Time</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Real-time latency monitoring per provider
           </CardDescription>
         </CardHeader>
@@ -147,17 +147,17 @@ export default function ProvidersPage() {
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Provider Details</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Configuration and health status
           </CardDescription>
         </CardHeader>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-left text-zinc-400">
+              <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="pb-3 px-6">Provider</th>
                 <th className="pb-3 pr-4">Status</th>
                 <th className="pb-3 pr-4">Latency</th>
@@ -167,18 +167,18 @@ export default function ProvidersPage() {
             </thead>
             <tbody>
               {providers.map((provider) => (
-                <tr key={provider.id} className="border-b border-zinc-800 last:border-0">
+                <tr key={provider.id} className="border-b border-border last:border-0">
                   <td className="py-3 px-6 font-medium">{provider.name}</td>
                   <td className="py-3 pr-4">
                     <Badge variant={provider.healthy ? "default" : "destructive"}>
                       {provider.healthy ? "Healthy" : "Down"}
                     </Badge>
                   </td>
-                  <td className="py-3 pr-4 text-zinc-400">
+                  <td className="py-3 pr-4 text-muted-foreground">
                     {provider.latencyMs > 0 ? `${provider.latencyMs}ms` : "N/A"}
                   </td>
-                  <td className="py-3 pr-4 text-zinc-400">{provider.modelCount}</td>
-                  <td className="py-3 text-zinc-400">
+                  <td className="py-3 pr-4 text-muted-foreground">{provider.modelCount}</td>
+                  <td className="py-3 text-muted-foreground">
                     {provider.hasKey ? "••••••••" : "Not configured"}
                   </td>
                 </tr>

@@ -53,38 +53,38 @@ export default function BillingPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Billing</h1>
-        <p className="mt-1 text-zinc-400">Manage your subscription and usage</p>
+        <p className="mt-1 text-muted-foreground">Manage your subscription and usage</p>
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Current Plan</CardTitle>
-              <CardDescription className="text-zinc-400">
+              <CardDescription className="text-muted-foreground">
                 You are currently on the Free plan
               </CardDescription>
             </div>
             <Badge>Free</Badge>
           </div>
         </CardHeader>
-        <div className="p-6 border-t border-zinc-800">
+        <div className="p-6 border-t border-border">
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-zinc-400">Token Usage This Month</span>
+                <span className="text-sm text-muted-foreground">Token Usage This Month</span>
                 <span className="text-sm font-medium">72K / 100K</span>
               </div>
-              <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-2 bg-accent rounded-full overflow-hidden">
                 <div className="h-full bg-blue-500" style={{ width: "72%" }} />
               </div>
-              <p className="mt-1 text-xs text-zinc-500">28K tokens remaining</p>
+              <p className="mt-1 text-xs text-muted-foreground">28K tokens remaining</p>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+            <div className="flex items-center justify-between pt-4 border-t border-border">
               <div>
                 <p className="text-sm font-medium">Need more tokens?</p>
-                <p className="text-xs text-zinc-500">Upgrade to Pro for 5M tokens/month</p>
+                <p className="text-xs text-muted-foreground">Upgrade to Pro for 5M tokens/month</p>
               </div>
               <Button>Upgrade Plan</Button>
             </div>
@@ -96,7 +96,7 @@ export default function BillingPage() {
         {plans.map((plan) => (
           <Card
             key={plan.name}
-            className={`bg-zinc-900 border-zinc-800 ${
+            className={`bg-card border-border ${
               plan.current ? "ring-2 ring-blue-500" : ""
             }`}
           >
@@ -107,15 +107,15 @@ export default function BillingPage() {
               </div>
               <div className="mt-4">
                 <span className="text-3xl font-bold">{plan.price}</span>
-                {plan.period && <span className="text-zinc-400">{plan.period}</span>}
+                {plan.period && <span className="text-muted-foreground">{plan.period}</span>}
               </div>
             </CardHeader>
-            <div className="p-6 border-t border-zinc-800">
+            <div className="p-6 border-t border-border">
               <ul className="space-y-3">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm">
                     <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-zinc-400">{feature}</span>
+                    <span className="text-muted-foreground">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -131,22 +131,22 @@ export default function BillingPage() {
         ))}
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Payment Method</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Manage your payment information
           </CardDescription>
         </CardHeader>
-        <div className="p-6 border-t border-zinc-800">
-          <div className="flex items-center justify-between rounded-lg border border-zinc-800 p-4">
+        <div className="p-6 border-t border-border">
+          <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-zinc-800 p-2">
-                <CreditCard className="h-5 w-5 text-zinc-400" />
+              <div className="rounded-full bg-accent p-2">
+                <CreditCard className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
                 <p className="text-sm font-medium">No payment method</p>
-                <p className="text-xs text-zinc-500">Add a card to upgrade your plan</p>
+                <p className="text-xs text-muted-foreground">Add a card to upgrade your plan</p>
               </div>
             </div>
             <Button variant="outline" size="sm">
@@ -156,36 +156,36 @@ export default function BillingPage() {
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Billing History</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             View past invoices and payments
           </CardDescription>
         </CardHeader>
-        <div className="p-6 border-t border-zinc-800">
-          <div className="text-center py-8 text-zinc-400">
+        <div className="p-6 border-t border-border">
+          <div className="text-center py-8 text-muted-foreground">
             <p className="text-sm">No billing history yet</p>
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Your invoices will appear here once you upgrade
             </p>
           </div>
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Customer Portal</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Manage subscriptions via Stripe
           </CardDescription>
         </CardHeader>
-        <div className="p-6 border-t border-zinc-800">
+        <div className="p-6 border-t border-border">
           <Button variant="outline" className="w-full">
             <ExternalLink className="mr-2 h-4 w-4" />
             Open Stripe Portal
           </Button>
-          <p className="mt-2 text-xs text-zinc-500 text-center">
+          <p className="mt-2 text-xs text-muted-foreground text-center">
             Update payment methods, view invoices, and manage subscriptions
           </p>
         </div>

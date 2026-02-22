@@ -41,7 +41,7 @@ export default function DashboardPage() {
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="mt-1 text-zinc-400">Overview of your gateway usage</p>
+          <p className="mt-1 text-muted-foreground">Overview of your gateway usage</p>
         </div>
       </div>
     );
@@ -51,14 +51,14 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="mt-1 text-zinc-400">Overview of your gateway usage</p>
+        <p className="mt-1 text-muted-foreground">Overview of your gateway usage</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-card border-border">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardDescription className="text-zinc-400">Tokens This Month</CardDescription>
+              <CardDescription className="text-muted-foreground">Tokens This Month</CardDescription>
               <TrendingUp className="h-4 w-4 text-blue-500" />
             </div>
             <CardTitle className="text-2xl">1.2M</CardTitle>
@@ -66,10 +66,10 @@ export default function DashboardPage() {
           </CardHeader>
         </Card>
 
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-card border-border">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardDescription className="text-zinc-400">Cost This Month</CardDescription>
+              <CardDescription className="text-muted-foreground">Cost This Month</CardDescription>
               <DollarSign className="h-4 w-4 text-blue-500" />
             </div>
             <CardTitle className="text-2xl">$24.80</CardTitle>
@@ -77,21 +77,21 @@ export default function DashboardPage() {
           </CardHeader>
         </Card>
 
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-card border-border">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardDescription className="text-zinc-400">Cache Hit Rate</CardDescription>
+              <CardDescription className="text-muted-foreground">Cache Hit Rate</CardDescription>
               <Zap className="h-4 w-4 text-blue-500" />
             </div>
             <CardTitle className="text-2xl">68%</CardTitle>
-            <p className="text-xs text-zinc-400">4,250 cached entries</p>
+            <p className="text-xs text-muted-foreground">4,250 cached entries</p>
           </CardHeader>
         </Card>
 
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-card border-border">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardDescription className="text-zinc-400">Avg Latency</CardDescription>
+              <CardDescription className="text-muted-foreground">Avg Latency</CardDescription>
               <Activity className="h-4 w-4 text-blue-500" />
             </div>
             <CardTitle className="text-2xl">342ms</CardTitle>
@@ -101,10 +101,10 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle>Usage Over Time</CardTitle>
-            <CardDescription className="text-zinc-400">Token usage by day</CardDescription>
+            <CardDescription className="text-muted-foreground">Token usage by day</CardDescription>
           </CardHeader>
           <div className="h-64 px-4 pb-4">
             <ResponsiveContainer width="100%" height="100%">
@@ -137,10 +137,10 @@ export default function DashboardPage() {
           </div>
         </Card>
 
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-card border-border">
           <CardHeader>
             <CardTitle>Provider Distribution</CardTitle>
-            <CardDescription className="text-zinc-400">Usage by provider</CardDescription>
+            <CardDescription className="text-muted-foreground">Usage by provider</CardDescription>
           </CardHeader>
           <div className="h-64 px-4 pb-4">
             <ResponsiveContainer width="100%" height="100%">
@@ -172,39 +172,39 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Cost Savings Summary</CardTitle>
-          <CardDescription className="text-zinc-400">How caching and routing saves you money</CardDescription>
+          <CardDescription className="text-muted-foreground">How caching and routing saves you money</CardDescription>
         </CardHeader>
         <div className="grid gap-4 p-6 md:grid-cols-3">
           <div>
-            <p className="text-sm text-zinc-400">Cache Savings</p>
+            <p className="text-sm text-muted-foreground">Cache Savings</p>
             <p className="text-2xl font-bold text-green-500">$12.40</p>
-            <p className="text-xs text-zinc-500">68% hit rate</p>
+            <p className="text-xs text-muted-foreground">68% hit rate</p>
           </div>
           <div>
-            <p className="text-sm text-zinc-400">Local Model Usage</p>
+            <p className="text-sm text-muted-foreground">Local Model Usage</p>
             <p className="text-2xl font-bold text-green-500">$2.80</p>
-            <p className="text-xs text-zinc-500">Via Ollama</p>
+            <p className="text-xs text-muted-foreground">Via Ollama</p>
           </div>
           <div>
-            <p className="text-sm text-zinc-400">Smart Routing</p>
+            <p className="text-sm text-muted-foreground">Smart Routing</p>
             <p className="text-2xl font-bold text-green-500">$0.60</p>
-            <p className="text-xs text-zinc-500">Optimal provider selection</p>
+            <p className="text-xs text-muted-foreground">Optimal provider selection</p>
           </div>
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Recent Requests</CardTitle>
-          <CardDescription className="text-zinc-400">Last few API calls</CardDescription>
+          <CardDescription className="text-muted-foreground">Last few API calls</CardDescription>
         </CardHeader>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-left text-zinc-400">
+              <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="pb-3 px-6">Model</th>
                 <th className="pb-3 pr-4">Tokens</th>
                 <th className="pb-3 pr-4">Cost</th>
@@ -214,10 +214,10 @@ export default function DashboardPage() {
             </thead>
             <tbody>
               {recentRequests.map((req) => (
-                <tr key={req.id} className="border-b border-zinc-800 last:border-0">
+                <tr key={req.id} className="border-b border-border last:border-0">
                   <td className="py-3 px-6 font-medium">{req.model}</td>
-                  <td className="py-3 pr-4 text-zinc-400">{req.tokens.toLocaleString()}</td>
-                  <td className="py-3 pr-4 text-zinc-400">{req.cost}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{req.tokens.toLocaleString()}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{req.cost}</td>
                   <td className="py-3 pr-4">
                     <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
                       req.status === "cached" ? "bg-yellow-500/10 text-yellow-500" : "bg-green-500/10 text-green-500"
@@ -225,7 +225,7 @@ export default function DashboardPage() {
                       {req.status}
                     </span>
                   </td>
-                  <td className="py-3 text-zinc-400">{req.time}</td>
+                  <td className="py-3 text-muted-foreground">{req.time}</td>
                 </tr>
               ))}
             </tbody>

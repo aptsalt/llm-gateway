@@ -87,22 +87,22 @@ export default function SignupPage() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-zinc-100">
+        <h1 className="text-3xl font-bold text-foreground">
           {step === "account" ? "Create your account" : "Set up your organization"}
         </h1>
-        <p className="mt-2 text-sm text-zinc-400">
+        <p className="mt-2 text-sm text-muted-foreground">
           {step === "account"
             ? "Get started with RouterAI LLM Gateway"
             : "Your workspace for managing API keys and usage"}
         </p>
       </div>
 
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
+      <div className="rounded-lg border border-border bg-card p-6">
         <form onSubmit={handleSignup} className="space-y-4">
           {step === "account" ? (
             <>
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium text-zinc-100">
+                <label htmlFor="email" className="text-sm font-medium text-foreground">
                   Email
                 </label>
                 <Input
@@ -117,7 +117,7 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium text-zinc-100">
+                <label htmlFor="password" className="text-sm font-medium text-foreground">
                   Password
                 </label>
                 <Input
@@ -130,12 +130,12 @@ export default function SignupPage() {
                   disabled={loading}
                   minLength={6}
                 />
-                <p className="text-xs text-zinc-500">At least 6 characters</p>
+                <p className="text-xs text-muted-foreground">At least 6 characters</p>
               </div>
             </>
           ) : (
             <div className="space-y-2">
-              <label htmlFor="orgName" className="text-sm font-medium text-zinc-100">
+              <label htmlFor="orgName" className="text-sm font-medium text-foreground">
                 Organization Name
               </label>
               <Input
@@ -147,7 +147,7 @@ export default function SignupPage() {
                 required
                 disabled={loading}
               />
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 Slug: {orgName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "acme-inc"}
               </p>
             </div>
@@ -160,7 +160,7 @@ export default function SignupPage() {
       </div>
 
       {step === "account" && (
-        <div className="text-center text-sm text-zinc-400">
+        <div className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link href="/login" className="text-blue-500 hover:underline">
             Sign in

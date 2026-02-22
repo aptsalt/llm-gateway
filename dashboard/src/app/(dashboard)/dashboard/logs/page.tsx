@@ -102,21 +102,21 @@ export default function LogsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Request Logs</h1>
-        <p className="mt-1 text-zinc-400">View detailed logs of all API requests</p>
+        <p className="mt-1 text-muted-foreground">View detailed logs of all API requests</p>
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>Recent Requests</CardTitle>
-              <CardDescription className="text-zinc-400">
+              <CardDescription className="text-muted-foreground">
                 Real-time request logs with filtering
               </CardDescription>
             </div>
             <div className="flex gap-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search model..."
                   value={searchQuery}
@@ -143,7 +143,7 @@ export default function LogsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-left text-zinc-400">
+              <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="pb-3 px-6">Timestamp</th>
                 <th className="pb-3 pr-4">Model</th>
                 <th className="pb-3 pr-4">Provider</th>
@@ -156,15 +156,15 @@ export default function LogsPage() {
             </thead>
             <tbody>
               {filteredLogs.map((log) => (
-                <tr key={log.id} className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/50">
-                  <td className="py-3 px-6 text-zinc-400 font-mono text-xs">
+                <tr key={log.id} className="border-b border-border last:border-0 hover:bg-accent/50">
+                  <td className="py-3 px-6 text-muted-foreground font-mono text-xs">
                     {log.timestamp}
                   </td>
                   <td className="py-3 pr-4 font-medium">{log.model}</td>
-                  <td className="py-3 pr-4 text-zinc-400">{log.provider}</td>
-                  <td className="py-3 pr-4 text-zinc-400">{log.tokens.toLocaleString()}</td>
-                  <td className="py-3 pr-4 text-zinc-400">{log.cost}</td>
-                  <td className="py-3 pr-4 text-zinc-400">{log.latency}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{log.provider}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{log.tokens.toLocaleString()}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{log.cost}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{log.latency}</td>
                   <td className="py-3 pr-4">
                     <Badge
                       variant={
@@ -181,7 +181,7 @@ export default function LogsPage() {
                   <td className="py-3">
                     <button
                       onClick={() => setSelectedLog(log)}
-                      className="rounded p-1 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100"
+                      className="rounded p-1 hover:bg-accent text-muted-foreground hover:text-accent-foreground"
                       title="View details"
                     >
                       <ExternalLink className="h-4 w-4" />
@@ -191,7 +191,7 @@ export default function LogsPage() {
               ))}
               {filteredLogs.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-zinc-400">
+                  <td colSpan={8} className="py-8 text-center text-muted-foreground">
                     No logs match your filters
                   </td>
                 </tr>
@@ -199,16 +199,16 @@ export default function LogsPage() {
             </tbody>
           </table>
         </div>
-        <div className="border-t border-zinc-800 p-4">
+        <div className="border-t border-border p-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-400">
+            <span className="text-muted-foreground">
               Showing {filteredLogs.length} of {logs.length} requests
             </span>
             <div className="flex gap-2">
-              <button className="px-3 py-1 rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 disabled:opacity-50" disabled>
+              <button className="px-3 py-1 rounded bg-accent text-muted-foreground hover:bg-accent disabled:opacity-50" disabled>
                 Previous
               </button>
-              <button className="px-3 py-1 rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700">
+              <button className="px-3 py-1 rounded bg-accent text-muted-foreground hover:bg-accent">
                 Next
               </button>
             </div>
@@ -225,27 +225,27 @@ export default function LogsPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-zinc-400">Model</p>
+                  <p className="text-sm text-muted-foreground">Model</p>
                   <p className="font-medium">{selectedLog.model}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-zinc-400">Provider</p>
+                  <p className="text-sm text-muted-foreground">Provider</p>
                   <p className="font-medium">{selectedLog.provider}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-zinc-400">Tokens</p>
+                  <p className="text-sm text-muted-foreground">Tokens</p>
                   <p className="font-medium">{selectedLog.tokens.toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-zinc-400">Cost</p>
+                  <p className="text-sm text-muted-foreground">Cost</p>
                   <p className="font-medium">{selectedLog.cost}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-zinc-400">Latency</p>
+                  <p className="text-sm text-muted-foreground">Latency</p>
                   <p className="font-medium">{selectedLog.latency}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-zinc-400">Status</p>
+                  <p className="text-sm text-muted-foreground">Status</p>
                   <Badge variant={selectedLog.cached ? "secondary" : "default"}>
                     {selectedLog.status}
                   </Badge>
@@ -253,14 +253,14 @@ export default function LogsPage() {
               </div>
 
               <div>
-                <p className="text-sm text-zinc-400 mb-2">Prompt Preview</p>
-                <div className="rounded-lg bg-zinc-950 p-3 text-sm text-zinc-300">
+                <p className="text-sm text-muted-foreground mb-2">Prompt Preview</p>
+                <div className="rounded-lg bg-background p-3 text-sm text-foreground">
                   {selectedLog.promptPreview}
                 </div>
               </div>
 
               <div>
-                <p className="text-sm text-zinc-400 mb-2">Timestamp</p>
+                <p className="text-sm text-muted-foreground mb-2">Timestamp</p>
                 <p className="font-mono text-sm">{selectedLog.timestamp}</p>
               </div>
 

@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-zinc-950 text-zinc-100 antialiased">
+      <body className="min-h-screen bg-background text-foreground antialiased">
         <ThemeProvider>
           {children}
           <Toaster richColors position="bottom-right" />

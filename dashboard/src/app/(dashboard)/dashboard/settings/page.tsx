@@ -37,17 +37,17 @@ export default function SettingsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="mt-1 text-zinc-400">Manage your organization</p>
+        <p className="mt-1 text-muted-foreground">Manage your organization</p>
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Organization Details</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Basic information about your organization
           </CardDescription>
         </CardHeader>
-        <div className="p-6 border-t border-zinc-800 space-y-4">
+        <div className="p-6 border-t border-border space-y-4">
           <div className="space-y-2">
             <label htmlFor="orgName" className="text-sm font-medium">
               Organization Name
@@ -67,9 +67,9 @@ export default function SettingsPage() {
               id="orgSlug"
               value="acme-inc"
               disabled
-              className="bg-zinc-950 text-zinc-500"
+              className="bg-background text-muted-foreground"
             />
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-muted-foreground">
               The slug cannot be changed after creation
             </p>
           </div>
@@ -78,14 +78,14 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Team Members</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Manage who has access to your organization
           </CardDescription>
         </CardHeader>
-        <div className="p-6 border-t border-zinc-800">
+        <div className="p-6 border-t border-border">
           <div className="space-y-4 mb-6">
             <div className="flex gap-2">
               <Input
@@ -104,7 +104,7 @@ export default function SettingsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-left text-zinc-400">
+                <tr className="border-b border-border text-left text-muted-foreground">
                   <th className="pb-3 pr-4">Email</th>
                   <th className="pb-3 pr-4">Role</th>
                   <th className="pb-3 pr-4">Joined</th>
@@ -113,19 +113,19 @@ export default function SettingsPage() {
               </thead>
               <tbody>
                 {members.map((member) => (
-                  <tr key={member.id} className="border-b border-zinc-800 last:border-0">
+                  <tr key={member.id} className="border-b border-border last:border-0">
                     <td className="py-3 pr-4 font-medium">{member.email}</td>
                     <td className="py-3 pr-4">
                       <Badge variant={member.role === "owner" ? "default" : "secondary"}>
                         {member.role}
                       </Badge>
                     </td>
-                    <td className="py-3 pr-4 text-zinc-400">{member.joinedAt}</td>
+                    <td className="py-3 pr-4 text-muted-foreground">{member.joinedAt}</td>
                     <td className="py-3">
                       {member.role !== "owner" && (
                         <button
                           onClick={() => handleRemoveMember(member.id)}
-                          className="rounded p-1 hover:bg-zinc-800 text-zinc-400 hover:text-red-400"
+                          className="rounded p-1 hover:bg-accent text-muted-foreground hover:text-red-400"
                           title="Remove member"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -140,22 +140,22 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>API Configuration</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Gateway endpoint and authentication
           </CardDescription>
         </CardHeader>
-        <div className="p-6 border-t border-zinc-800 space-y-4">
+        <div className="p-6 border-t border-border space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Gateway Endpoint</label>
             <Input
               value="http://localhost:4000"
               disabled
-              className="bg-zinc-950 text-zinc-500 font-mono text-sm"
+              className="bg-background text-muted-foreground font-mono text-sm"
             />
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-muted-foreground">
               Your gateway API base URL
             </p>
           </div>
@@ -165,29 +165,29 @@ export default function SettingsPage() {
             <Input
               value="http://localhost:4000/v1"
               disabled
-              className="bg-zinc-950 text-zinc-500 font-mono text-sm"
+              className="bg-background text-muted-foreground font-mono text-sm"
             />
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-muted-foreground">
               Use this with OpenAI SDK clients
             </p>
           </div>
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Danger Zone</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Irreversible actions
           </CardDescription>
         </CardHeader>
-        <div className="p-6 border-t border-zinc-800">
+        <div className="p-6 border-t border-border">
           <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4">
             <div className="flex items-start gap-3">
               <Trash2 className="h-5 w-5 text-red-500 mt-0.5" />
               <div className="flex-1">
                 <h3 className="text-sm font-medium text-red-500">Delete Organization</h3>
-                <p className="mt-1 text-xs text-zinc-400">
+                <p className="mt-1 text-xs text-muted-foreground">
                   This will permanently delete your organization, all API keys, and usage data.
                   This action cannot be undone.
                 </p>

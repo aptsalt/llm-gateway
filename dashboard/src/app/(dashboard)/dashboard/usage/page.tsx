@@ -38,7 +38,7 @@ export default function UsagePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Usage Analytics</h1>
-          <p className="mt-1 text-zinc-400">Track your token usage and costs</p>
+          <p className="mt-1 text-muted-foreground">Track your token usage and costs</p>
         </div>
         <Select value={dateRange} onChange={(e) => setDateRange(e.target.value)}>
           <option value="7d">Last 7 days</option>
@@ -48,35 +48,35 @@ export default function UsagePage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardDescription className="text-zinc-400">Total Tokens</CardDescription>
+            <CardDescription className="text-muted-foreground">Total Tokens</CardDescription>
             <CardTitle className="text-2xl">340K</CardTitle>
             <p className="text-xs text-green-500">+18% from previous period</p>
           </CardHeader>
         </Card>
 
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardDescription className="text-zinc-400">Total Cost</CardDescription>
+            <CardDescription className="text-muted-foreground">Total Cost</CardDescription>
             <CardTitle className="text-2xl">$24.80</CardTitle>
             <p className="text-xs text-green-500">Saved $15.20 with cache</p>
           </CardHeader>
         </Card>
 
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-card border-border">
           <CardHeader>
-            <CardDescription className="text-zinc-400">Avg Cost per 1K Tokens</CardDescription>
+            <CardDescription className="text-muted-foreground">Avg Cost per 1K Tokens</CardDescription>
             <CardTitle className="text-2xl">$0.073</CardTitle>
-            <p className="text-xs text-zinc-400">Mixed provider usage</p>
+            <p className="text-xs text-muted-foreground">Mixed provider usage</p>
           </CardHeader>
         </Card>
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Token Usage by Provider</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Stacked area chart showing usage across providers
           </CardDescription>
         </CardHeader>
@@ -149,17 +149,17 @@ export default function UsagePage() {
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Cost Breakdown by Provider</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Total spend per provider
           </CardDescription>
         </CardHeader>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-left text-zinc-400">
+              <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="pb-3 px-6">Provider</th>
                 <th className="pb-3 pr-4">Tokens</th>
                 <th className="pb-3 pr-4">Cost</th>
@@ -169,22 +169,22 @@ export default function UsagePage() {
             </thead>
             <tbody>
               {costBreakdown.map((item) => (
-                <tr key={item.provider} className="border-b border-zinc-800 last:border-0">
+                <tr key={item.provider} className="border-b border-border last:border-0">
                   <td className="py-3 px-6 font-medium">{item.provider}</td>
-                  <td className="py-3 pr-4 text-zinc-400">{item.tokens.toLocaleString()}</td>
-                  <td className="py-3 pr-4 text-zinc-400">${item.cost.toFixed(2)}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{item.tokens.toLocaleString()}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">${item.cost.toFixed(2)}</td>
                   <td className="py-3 pr-4">
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-24 bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-2 w-24 bg-accent rounded-full overflow-hidden">
                         <div
                           className="h-full bg-blue-500"
                           style={{ width: `${item.percentage}%` }}
                         />
                       </div>
-                      <span className="text-zinc-400">{item.percentage}%</span>
+                      <span className="text-muted-foreground">{item.percentage}%</span>
                     </div>
                   </td>
-                  <td className="py-3 text-zinc-400">
+                  <td className="py-3 text-muted-foreground">
                     ${(item.cost / (item.tokens / 1000)).toFixed(4)}
                   </td>
                 </tr>
@@ -194,17 +194,17 @@ export default function UsagePage() {
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Model Usage Distribution</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Requests and costs by model
           </CardDescription>
         </CardHeader>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-left text-zinc-400">
+              <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="pb-3 px-6">Model</th>
                 <th className="pb-3 pr-4">Requests</th>
                 <th className="pb-3 pr-4">Tokens</th>
@@ -213,11 +213,11 @@ export default function UsagePage() {
             </thead>
             <tbody>
               {modelUsage.map((model) => (
-                <tr key={model.model} className="border-b border-zinc-800 last:border-0">
+                <tr key={model.model} className="border-b border-border last:border-0">
                   <td className="py-3 px-6 font-medium">{model.model}</td>
-                  <td className="py-3 pr-4 text-zinc-400">{model.requests.toLocaleString()}</td>
-                  <td className="py-3 pr-4 text-zinc-400">{model.tokens.toLocaleString()}</td>
-                  <td className="py-3 text-zinc-400">{model.cost}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{model.requests.toLocaleString()}</td>
+                  <td className="py-3 pr-4 text-muted-foreground">{model.tokens.toLocaleString()}</td>
+                  <td className="py-3 text-muted-foreground">{model.cost}</td>
                 </tr>
               ))}
             </tbody>
@@ -225,28 +225,28 @@ export default function UsagePage() {
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Cache Performance</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Impact of semantic caching on costs
           </CardDescription>
         </CardHeader>
         <div className="grid gap-4 p-6 md:grid-cols-3">
           <div>
-            <p className="text-sm text-zinc-400">Hit Rate</p>
+            <p className="text-sm text-muted-foreground">Hit Rate</p>
             <p className="text-2xl font-bold">68%</p>
-            <p className="text-xs text-zinc-500">4,250 hits / 6,180 requests</p>
+            <p className="text-xs text-muted-foreground">4,250 hits / 6,180 requests</p>
           </div>
           <div>
-            <p className="text-sm text-zinc-400">Saved Requests</p>
+            <p className="text-sm text-muted-foreground">Saved Requests</p>
             <p className="text-2xl font-bold">4,250</p>
-            <p className="text-xs text-zinc-500">Served from cache</p>
+            <p className="text-xs text-muted-foreground">Served from cache</p>
           </div>
           <div>
-            <p className="text-sm text-zinc-400">Cost Savings</p>
+            <p className="text-sm text-muted-foreground">Cost Savings</p>
             <p className="text-2xl font-bold text-green-500">$15.20</p>
-            <p className="text-xs text-zinc-500">38% reduction</p>
+            <p className="text-xs text-muted-foreground">38% reduction</p>
           </div>
         </div>
       </Card>

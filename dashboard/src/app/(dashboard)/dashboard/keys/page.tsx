@@ -89,7 +89,7 @@ export default function ApiKeysPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">API Keys</h1>
-          <p className="mt-1 text-zinc-400">Manage your RouterAI API keys</p>
+          <p className="mt-1 text-muted-foreground">Manage your RouterAI API keys</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -139,17 +139,17 @@ export default function ApiKeysPage() {
         </Dialog>
       </div>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Your API Keys</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             Use these keys to authenticate requests to the gateway
           </CardDescription>
         </CardHeader>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-left text-zinc-400">
+              <tr className="border-b border-border text-left text-muted-foreground">
                 <th className="pb-3 px-6">Name</th>
                 <th className="pb-3 pr-4">Key</th>
                 <th className="pb-3 pr-4">Environment</th>
@@ -160,10 +160,10 @@ export default function ApiKeysPage() {
             </thead>
             <tbody>
               {keys.map((key) => (
-                <tr key={key.id} className="border-b border-zinc-800 last:border-0">
+                <tr key={key.id} className="border-b border-border last:border-0">
                   <td className="py-4 px-6 font-medium">{key.name}</td>
                   <td className="py-4 pr-4">
-                    <code className="rounded bg-zinc-800 px-2 py-1 text-xs font-mono">
+                    <code className="rounded bg-accent px-2 py-1 text-xs font-mono">
                       {visibleKeys.has(key.id) ? key.key : maskKey(key.key)}
                     </code>
                   </td>
@@ -180,13 +180,13 @@ export default function ApiKeysPage() {
                       {key.environment}
                     </Badge>
                   </td>
-                  <td className="py-4 pr-4 text-zinc-400">{key.createdAt}</td>
-                  <td className="py-4 pr-4 text-zinc-400">{key.lastUsed || "Never"}</td>
+                  <td className="py-4 pr-4 text-muted-foreground">{key.createdAt}</td>
+                  <td className="py-4 pr-4 text-muted-foreground">{key.lastUsed || "Never"}</td>
                   <td className="py-4">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => toggleKeyVisibility(key.id)}
-                        className="rounded p-1 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100"
+                        className="rounded p-1 hover:bg-accent text-muted-foreground hover:text-accent-foreground"
                         title={visibleKeys.has(key.id) ? "Hide key" : "Show key"}
                       >
                         {visibleKeys.has(key.id) ? (
@@ -197,14 +197,14 @@ export default function ApiKeysPage() {
                       </button>
                       <button
                         onClick={() => handleCopyKey(key.key)}
-                        className="rounded p-1 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100"
+                        className="rounded p-1 hover:bg-accent text-muted-foreground hover:text-accent-foreground"
                         title="Copy key"
                       >
                         <Copy className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleRevokeKey(key.id)}
-                        className="rounded p-1 hover:bg-zinc-800 text-zinc-400 hover:text-red-400"
+                        className="rounded p-1 hover:bg-accent text-muted-foreground hover:text-red-400"
                         title="Revoke key"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -215,7 +215,7 @@ export default function ApiKeysPage() {
               ))}
               {keys.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-zinc-400">
+                  <td colSpan={6} className="py-8 text-center text-muted-foreground">
                     No API keys yet. Create one to get started.
                   </td>
                 </tr>
@@ -225,16 +225,16 @@ export default function ApiKeysPage() {
         </div>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Usage Example</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardDescription className="text-muted-foreground">
             How to use your API key
           </CardDescription>
         </CardHeader>
         <div className="p-6">
-          <pre className="rounded-lg bg-zinc-950 p-4 text-sm overflow-x-auto">
-            <code className="text-zinc-300">
+          <pre className="rounded-lg bg-background p-4 text-sm overflow-x-auto">
+            <code className="text-foreground">
 {`curl http://localhost:4000/v1/chat/completions \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
